@@ -1,11 +1,14 @@
 package test;
 
 public class TestA {
-    public void func1(boolean flag){
-        if(flag){
+    public void func1(int i){
+        if(i>0){
             System.out.println("no");
-        }else{
-            System.out.println("yes");
+            System.out.println("no");
+            System.out.println("no");
+            System.out.println("no");
+        } else{
+            System.out.println("yep");
         }
     }
 

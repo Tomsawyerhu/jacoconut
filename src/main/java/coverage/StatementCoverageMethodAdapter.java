@@ -6,7 +6,10 @@ import com.sun.xml.internal.ws.org.objectweb.asm.MethodVisitor;
 import org.apache.log4j.Logger;
 import org.objectweb.asm.Opcodes;
 
-
+/**
+ * 行覆盖
+ * 语句执行前插入探针
+ */
 public class StatementCoverageMethodAdapter extends MethodAdapter {
     Logger logger = Logger.getLogger(StatementCoverageMethodAdapter.class);
     String name;

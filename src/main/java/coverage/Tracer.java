@@ -1,8 +1,11 @@
 package coverage;
 
+import javafx.util.Pair;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
 
@@ -49,6 +52,28 @@ public class Tracer {
             methodMap.put(key, 1);
         } else
             methodMap.put(key, methodMap.get(key) + 1);
+    }
+
+    /*
+     * 记录探针位置
+     */
+    public static void executeLines(int left,int line,String key) {
+        ConcurrentMap<String, List<Pair<Integer, Integer>>> map=ECGCoverageListener.probes.get();
+        if(map.containsKey(key)){
+            map.get(key).add(new Pair<>(left,line));
+        }else{
+            List<Pair<Integer, Integer>> list= new ArrayList<>();
+            list.add(new Pair<>(left,line));
+            map.put(key,list);
+        }
+    }
+
+    /*
+     * 记录执行的行数
+     */
+    public void executeLines2(int lines) {
+        int i=ECGCoverageListener.executeLines.get();
+        ECGCoverageListener.lines.compareAndSet(i,i+lines);
     }
 
 }
