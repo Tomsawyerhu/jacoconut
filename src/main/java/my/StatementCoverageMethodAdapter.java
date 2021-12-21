@@ -57,7 +57,14 @@ public class StatementCoverageMethodAdapter extends MethodAdapter {
     public void visitTableSwitchInsn(int min, int max, Label dflt, Label[] labels) {
         super.visitTableSwitchInsn(min, max, dflt, labels);
         //todo record where to insert left probe
-        for(Label label:labels)this.possibleLefts.add(label.getOffset());
+        for(Label label:labels)try {
+            Field line=label.getClass().getDeclaredField("line");
+            line.setAccessible(true);
+            this.possibleLefts.add(line.getInt(label));
+            this.possibleLefts.add(this.line+1);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
         //todo insert right probe
         insertRightProbe();
     }
