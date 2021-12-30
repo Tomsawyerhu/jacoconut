@@ -1,10 +1,10 @@
-package my;
+package statementCoverage.methodAdapter;
 
 import com.sun.xml.internal.ws.org.objectweb.asm.Label;
 import com.sun.xml.internal.ws.org.objectweb.asm.MethodAdapter;
 import com.sun.xml.internal.ws.org.objectweb.asm.MethodVisitor;
-import coverage.ECGCoverageListener;
-import coverage.Tracer;
+import storage.Storage;
+import utils.Tracer;
 import javafx.util.Pair;
 import org.apache.log4j.Logger;
 import org.objectweb.asm.Opcodes;
@@ -25,16 +25,15 @@ import java.util.Set;
  *       2.1.1 athrow、return之前
  *       2.1.2 分支跳转语句记录跳转位置，等到visitlinenumber到这个位置的时候把上一次遍历到的行作为右探针位置进行记录
  */
-public class StatementCoverageMethodAdapter extends MethodAdapter {
-    Logger logger = Logger.getLogger(coverage.StatementCoverageMethodAdapter.class);
+public class StatementCoverageByBasicBlockMethodAdapter extends MethodAdapter {
+    Logger logger = Logger.getLogger(StatementCoverageByBasicBlockMethodAdapter.class);
     String name;
 
     int line;
     int left=-1;
     Set<Integer> possibleLefts=new HashSet<>();
 
-
-    public StatementCoverageMethodAdapter(MethodVisitor m, String n) {
+    protected StatementCoverageByBasicBlockMethodAdapter(MethodVisitor m, String n) {
         super(m);
         name = n;
     }
@@ -44,7 +43,7 @@ public class StatementCoverageMethodAdapter extends MethodAdapter {
         super.visitLineNumber(line,start);
 
         if(possibleLefts.contains(line)&&left>0){
-            //todo when reach the line where left probe should be inserted while last left probe exists,insert right probe
+            //when reach the line where left probe should be inserted while last left probe exists,insert right probe
             insertRightProbe();
         }
         this.line=line;
@@ -56,7 +55,7 @@ public class StatementCoverageMethodAdapter extends MethodAdapter {
     @Override
     public void visitTableSwitchInsn(int min, int max, Label dflt, Label[] labels) {
         super.visitTableSwitchInsn(min, max, dflt, labels);
-        //todo record where to insert left probe
+        //record where to insert left probe
         for(Label label:labels)try {
             Field line=label.getClass().getDeclaredField("line");
             line.setAccessible(true);
@@ -65,14 +64,14 @@ public class StatementCoverageMethodAdapter extends MethodAdapter {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
-        //todo insert right probe
+        //insert right probe
         insertRightProbe();
     }
 
     @Override
     public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
         super.visitLookupSwitchInsn(dflt, keys, labels);
-        //todo record where to insert left probe
+        //record where to insert left probe
         for(Label label:labels)try {
             Field line=label.getClass().getDeclaredField("line");
             line.setAccessible(true);
@@ -81,7 +80,7 @@ public class StatementCoverageMethodAdapter extends MethodAdapter {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
-        //todo insert right probe
+        //insert right probe
         insertRightProbe();
     }
 
@@ -89,7 +88,7 @@ public class StatementCoverageMethodAdapter extends MethodAdapter {
     public void visitJumpInsn(int opcode, Label label) {
         super.visitJumpInsn(opcode, label);
         //if、goto指令
-        //todo record where to insert left probe
+        //record where to insert left probe
         try {
             Field line=label.getClass().getDeclaredField("line");
             line.setAccessible(true);
@@ -98,7 +97,7 @@ public class StatementCoverageMethodAdapter extends MethodAdapter {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
-        //todo insert right probe
+        //insert right probe
         insertRightProbe();
     }
 
@@ -107,7 +106,7 @@ public class StatementCoverageMethodAdapter extends MethodAdapter {
         super.visitInsn(opcode);
         if((opcode>= Opcodes.IRETURN && opcode<=Opcodes.RETURN)||opcode==Opcodes.ATHROW){
             //return、throw指令
-            //todo insert right probe
+            //insert right probe
             insertRightProbe();
         }
     }
@@ -118,29 +117,26 @@ public class StatementCoverageMethodAdapter extends MethodAdapter {
     }
 
     private void insertRightProbe(){
-//        this.visitMethodInsn(Opcodes.INVOKESTATIC,
-//                "coverage/Tracer", "getInstance", "()L"
-//                        + "coverage/Tracer" + ";");
-//        mv.visitLdcInsn(String.valueOf(left));
-//        mv.visitLdcInsn(String.valueOf(line-left+1));
-//        mv.visitLdcInsn(name);
-//        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-//                "coverage/Tracer", "executeLines",
-//                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
         Tracer.executeLines(left,line-left+1,name);
-
         logger.info("left:"+left+";right:"+this.line);
-        int i=ECGCoverageListener.lines.get();
-        ECGCoverageListener.lines.compareAndSet(i,i+this.line-left+1);
+        int i= Storage.lines.get();
+        Storage.lines.compareAndSet(i,i+this.line-left+1);
         left=-1;
     }
 
+    /**
+     * after right probes have been all recorded
+     * for the second time visitClass method called
+     * probes should be inserted into bytecode
+     * StatementCoverageMethodAdapterExecutor will modify bytecode to see
+     * which line has been executed during runtime
+     */
     public static class StatementCoverageMethodAdapterExecutor extends MethodAdapter{
         String name;
         boolean isTarget=false;
         List<Pair<Integer,Integer>> probes=null;
 
-        public StatementCoverageMethodAdapterExecutor(MethodVisitor m, String n) {
+        protected StatementCoverageMethodAdapterExecutor(MethodVisitor m, String n) {
             super(m);
             this.name=n;
         }
@@ -148,8 +144,8 @@ public class StatementCoverageMethodAdapter extends MethodAdapter {
         @Override
         public void visitCode() {
             super.visitCode();
-            isTarget=ECGCoverageListener.probes.get().containsKey(this.name);
-            probes=ECGCoverageListener.probes.get().get(this.name);
+            isTarget= Storage.probes.get().containsKey(this.name);
+            probes= Storage.probes.get().get(this.name);
         }
 
         @Override
@@ -166,11 +162,11 @@ public class StatementCoverageMethodAdapter extends MethodAdapter {
 
         private void insertRightProbe(int lines){
             this.visitMethodInsn(Opcodes.INVOKESTATIC,
-                    "coverage/Tracer", "getInstance", "()L"
-                            + "coverage/Tracer" + ";");
+                    "utils/Tracer", "getInstance", "()L"
+                            + "utils/Tracer" + ";");
             mv.visitLdcInsn(lines);
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    "coverage/Tracer", "executeLines2",
+                    "utils/Tracer", "executeLines2",
                     "(I)V");
         }
     }
