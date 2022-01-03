@@ -10,6 +10,4 @@ public class Calculator {
         int executedLines=Storage.executeLines.get();
         logger.info("coverage rate:"+(double)(executedLines)/(double)lines);
     }
-
-
 }

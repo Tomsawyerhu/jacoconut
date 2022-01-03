@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentMap;
 
 
 public class Tracer {
-    private static Logger logger = Logger.getLogger(Tracer.class);
+    private static final Logger logger = Logger.getLogger(Tracer.class);
 
     private static Tracer trace = null;
 
