@@ -1,6 +1,7 @@
 package storage;
 
-import javafx.util.Pair;
+import com.github.javaparser.utils.Pair;
+
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

@@ -8,7 +8,7 @@ import java.io.IOException;
 public class TestRunnerA {
     public static void main(String[] args) {
         try {
-            api.JacoconutApi.lineCoverageProbe("test/TestA","C:\\Users\\tom\\Desktop\\jacoconut\\target\\classes\\test\\TestA.class", LCType.BASIC_BLOCK_RECORD);
+            api.JacoconutApi.lineCoverageProbe("C:\\Users\\tom\\Desktop\\jacoconut\\target\\classes\\test\\TestA.class", LCType.BASIC_BLOCK_RECORD);
         } catch (IOException e) {
             e.printStackTrace();
         }

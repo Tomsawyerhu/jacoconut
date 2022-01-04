@@ -1,30 +1,34 @@
 package api;
 
-import com.sun.xml.internal.ws.org.objectweb.asm.ClassReader;
-import com.sun.xml.internal.ws.org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 import statementCoverage.classAdapter.StatementCoverageClassAdaptor;
 import statementCoverage.methodAdapter.SCType;
 
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class JacoconutApi {
-    public static void lineCoverageProbe(String className,String classFile) throws IOException {
-        lineCoverageProbe(className,classFile,LCType.NAIVE);
+    public static void lineCoverageProbe(String classFile) throws IOException {
+        lineCoverageProbe(classFile,LCType.NAIVE);
     }
 
-    public static void lineCoverageProbe(String className,String classFile,LCType lcType) throws IOException {
-        ClassReader cr=new ClassReader(className);
+    public static void lineCoverageProbe(String classFile,LCType lcType) throws IOException {
+        FileInputStream inputStream=new FileInputStream(classFile);
+        ClassReader cr=new ClassReader(inputStream);
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        StatementCoverageClassAdaptor classVisitor = null;
+        StatementCoverageClassAdaptor classVisitor;
         if(lcType==LCType.NAIVE){
             classVisitor = new StatementCoverageClassAdaptor(cw, SCType.NAIVE);
         }else if(lcType==LCType.BASIC_BLOCK_RECORD){
             classVisitor = new StatementCoverageClassAdaptor(cw, SCType.BASIC_BLOCK_RECORD);
         }else{
+            inputStream.close();
             return;
         }
         cr.accept(classVisitor, ClassReader.SKIP_FRAMES);
+        inputStream.close();
         if(lcType==LCType.NAIVE){
             //write
             byte[] data = cw.toByteArray();
@@ -35,10 +39,14 @@ public class JacoconutApi {
             return;
         }
 
+        inputStream=new FileInputStream(classFile);
+        cr=new ClassReader(inputStream);
+
         cw=new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         StatementCoverageClassAdaptor classVisitor2 = new StatementCoverageClassAdaptor(cw,SCType.BASIC_BLOCK_EXEC);
         cr.accept(classVisitor2, ClassReader.SKIP_FRAMES);
 
+        inputStream.close();
         //write
         byte[] data = cw.toByteArray();
         FileOutputStream fos = new FileOutputStream(classFile);

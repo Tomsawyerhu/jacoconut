@@ -1,16 +1,15 @@
 package statementCoverage.classAdapter;
-
-import com.sun.xml.internal.ws.org.objectweb.asm.ClassAdapter;
-import com.sun.xml.internal.ws.org.objectweb.asm.ClassVisitor;
-import com.sun.xml.internal.ws.org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
 import statementCoverage.methodAdapter.SCType;
 import statementCoverage.methodAdapter.StatementCoverageMethodAdapterFactory;
 
-public class StatementCoverageClassAdaptor extends ClassAdapter {
+
+public class StatementCoverageClassAdaptor extends ClassVisitor {
     private final SCType methodVisitorType;
 
     public StatementCoverageClassAdaptor(ClassVisitor cv, SCType scType) {
-        super(cv);
+        super(458752,cv);
         this.methodVisitorType = scType;
     }
 
