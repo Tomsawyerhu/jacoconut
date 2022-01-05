@@ -4,10 +4,13 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import statementCoverage.classAdapter.StatementCoverageClassAdaptor;
 import statementCoverage.methodAdapter.SCType;
+import storage.Storage;
+import utils.Calculator;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class JacoconutApi {
     public static void lineCoverageProbe(String classFile) throws IOException {
@@ -53,5 +56,29 @@ public class JacoconutApi {
         fos.write(data);
         fos.flush();
         fos.close();
+    }
+
+    public static double calculateCoverage(){
+        return Calculator.calculateStatementCoverage();
+    }
+
+    public static void reset(){
+        Storage.lines.set(0);
+        Storage.executeLines.set(0);
+        Storage.probes.set(new ConcurrentHashMap<>());
+    }
+
+    /*
+     * for test
+     */
+    public static int getLine(){
+        return Storage.lines.get();
+    }
+
+    /*
+     * for test
+     */
+    public static int getExec(){
+        return Storage.executeLines.get();
     }
 }

@@ -252,7 +252,7 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
     private void insertProbe(int left, int line){
         Tracer.executeLines(left,line,name);
         int i= Storage.lines.get();
-        Storage.lines.compareAndSet(i,i+line);
+        Storage.lines.set(i+line);
     }
 
     /**

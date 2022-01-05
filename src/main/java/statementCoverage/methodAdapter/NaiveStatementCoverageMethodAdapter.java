@@ -24,7 +24,7 @@ public class NaiveStatementCoverageMethodAdapter extends MethodVisitor {
     public void visitLineNumber(int line, Label start) {
         super.visitLineNumber(line,start);
         int currentLines= Storage.lines.get();
-        Storage.lines.compareAndSet(currentLines,currentLines+1);
+        Storage.lines.set(currentLines+1);
         this.visitMethodInsn(Opcodes.INVOKESTATIC,
                 "utils/Tracer", "getInstance", "()L"
                         + "utils/Tracer" + ";");

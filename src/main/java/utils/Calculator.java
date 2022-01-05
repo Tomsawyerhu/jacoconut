@@ -5,9 +5,10 @@ import storage.Storage;
 
 public class Calculator {
     private static final Logger logger = Logger.getLogger(Calculator.class);
-    public static void calculateStatementCoverage(){
+    public static double calculateStatementCoverage(){
         int lines= Storage.lines.get();
         int executedLines=Storage.executeLines.get();
         logger.info("coverage rate:"+(double)(executedLines)/(double)lines);
+        return (double)(executedLines)/(double)lines;
     }
 }

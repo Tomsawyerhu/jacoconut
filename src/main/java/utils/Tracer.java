@@ -43,7 +43,7 @@ public class Tracer {
      */
     public void executeLines2(int lines) {
         int i= Storage.executeLines.get();
-        Storage.executeLines.compareAndSet(i,i+lines);
+        Storage.executeLines.set(i+lines);
     }
 
 }
