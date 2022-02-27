@@ -112,10 +112,7 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
                 for(int i=0;i<size;i+=1){
                     Border left=borders.get(i);
                     Border right=borders.get(i+1);
-                    boolean add=true;
-                    if(line<left.value){
-                        add=false;
-                    }
+                    boolean add= line >= left.value;
                     if(line==left.value&&!left.opened){
                         add=false;
                     }

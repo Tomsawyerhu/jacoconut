@@ -73,6 +73,13 @@
             <artifactId>javaparser-core</artifactId>
             <version>3.23.1</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.maven.shared/maven-verifier -->
+        <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-verifier</artifactId>
+            <version>1.7.2</version>
+        </dependency>
+
     </dependencies>
 
 
