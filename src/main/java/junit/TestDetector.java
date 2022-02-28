@@ -25,45 +25,53 @@ public class TestDetector {
         this.project=Paths.get(project).toAbsolutePath().toString();
         sec=new TestDetector.ExtendedClassLoader(new URL[0], JacoconutApi.class.getClassLoader());
         sec.addURL(Paths.get(project,"target","test-classes").toUri().toURL());
+        sec.addURL(Paths.get(project,"target","classes").toUri().toURL());
     }
 
     private TestDetector(){}
 
-    public Map<String, List<String>> detectAllJunitTests() throws IOException {
+    public Map<String, List<String>> detectAllJunitTests()  {
         Map<String, List<String>> m=new HashMap<>();
 
         final String finalProject = project;
-        Files
-                .walk(Paths.get(project,"target","test-classes"))
-                .filter(path -> path.getFileName().toString().endsWith(".class"))
-                .forEach(path -> {
-                    String className=Paths.get(finalProject,"target","test-classes").relativize(path).toString().replace(".class","").replace("/",".").replace("\\",".");
-                    Class<?> testClazz= null;
-                    try {
-                        testClazz = sec.loadClass(className);
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                    for(Method method:testClazz.getDeclaredMethods()){
-                        // @org.junit.Test
-                        // Public void test()
-                        if( Modifier.isPublic(method.getModifiers())
-                                && method.getReturnType().equals(Void.TYPE)
-                                && method.getParameterTypes().length==0
-                                && (method.getName().startsWith("test")||
-                                Arrays
-                                        .stream(method.getAnnotations())
-                                        .anyMatch(
-                                                annotation -> annotation.annotationType().getName().equals("org.junit.Test")
-                                        ))
-                        ){
-                            if(!m.containsKey(className)){
-                                m.put(className,new ArrayList<>());
-                            }
-                            m.get(className).add(method.getName());
+        try {
+            Files
+                    .walk(Paths.get(project,"target","test-classes"))
+                    .filter(path -> path.getFileName().toString().endsWith(".class"))
+                    .forEach(path -> {
+                        String className=Paths.get(finalProject,"target","test-classes").relativize(path).toString().replace(".class","").replace("/",".").replace("\\",".");
+                        Class<?> testClazz= null;
+                        try {
+                            testClazz = sec.loadClass(className);
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
                         }
-                    }
-                });
+
+                        if (testClazz != null) {
+                            for(Method method:testClazz.getMethods()){
+                                // @org.junit.Test
+                                // Public void test()
+                                if( Modifier.isPublic(method.getModifiers())
+                                        && method.getReturnType().equals(Void.TYPE)
+                                        && method.getParameterTypes().length==0
+                                        && (method.getName().startsWith("test")||
+                                        Arrays
+                                                .stream(method.getAnnotations())
+                                                .anyMatch(
+                                                        annotation -> annotation.annotationType().getName().equals("org.junit.Test")
+                                                ))
+                                ){
+                                    if(!m.containsKey(className)){
+                                        m.put(className,new ArrayList<>());
+                                    }
+                                    m.get(className).add(method.getName());
+                                }
+                            }
+                        }
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return m;
     }
 

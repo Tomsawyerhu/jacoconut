@@ -3,6 +3,7 @@ package api;
 import externX.JacoconutX;
 import junit.TestDetector;
 import junit.TestDriver;
+import org.apache.log4j.Logger;
 import org.apache.maven.it.VerificationException;
 import org.apache.maven.it.Verifier;
 import org.objectweb.asm.ClassReader;
@@ -22,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class JacoconutApi {
+    private static Logger logger= Logger.getLogger(JacoconutApi.class);
     public static void lineCoverageProbe(String classFile) throws IOException {
         lineCoverageProbe(classFile,LCType.NAIVE);
     }
@@ -29,7 +31,7 @@ public class JacoconutApi {
     public static void lineCoverageProbe(String classFile,LCType lcType) throws IOException {
         FileInputStream inputStream=new FileInputStream(classFile);
         ClassReader cr=new ClassReader(inputStream);
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         StatementCoverageClassAdaptor classVisitor;
         if(lcType==LCType.NAIVE){
             classVisitor = new StatementCoverageClassAdaptor(cw, SCType.NAIVE);
@@ -54,7 +56,7 @@ public class JacoconutApi {
         inputStream=new FileInputStream(classFile);
         cr=new ClassReader(inputStream);
 
-        cw=new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        cw=new ClassWriter(ClassWriter.COMPUTE_MAXS);
         StatementCoverageClassAdaptor classVisitor2 = new StatementCoverageClassAdaptor(cw,SCType.BASIC_BLOCK_EXEC);
         cr.accept(classVisitor2, ClassReader.SKIP_FRAMES);
 
@@ -75,9 +77,9 @@ public class JacoconutApi {
 
     public static void lineCoverageProbes(String project,LCType lcType) throws IOException{
         for(String classFile:findAllClassFiles(Paths.get(project,"target","classes"))){
-            System.out.println("start "+classFile);
+            logger.info("start "+classFile);
             lineCoverageProbe(classFile,lcType);
-            System.out.println("finish "+classFile);
+            logger.info("finish "+classFile);
         }
     }
 
@@ -133,12 +135,17 @@ public class JacoconutApi {
     }
 
     public static void main(String[] args) throws  VerificationException {
-        String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-codec-1_5_RELEASE";
+        String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-cli-cli-1.4";
+        logger.info("ready to compile...");
         preparation1(p);
-        System.out.println("end preparation1");
+        logger.info("compile done!");
         try {
+            logger.info("modify bytecode...");
             lineCoverageProbes(p,LCType.BASIC_BLOCK);
+            logger.info("modify bytecode done!");
+            logger.info("copy class file...");
             preparation2(p);
+            logger.info("copy class file done!");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -149,12 +156,14 @@ public class JacoconutApi {
 
             for (String clazz:m.keySet()){
                 for(String method:m.get(clazz)){
+                    logger.info(String.format("start test:%s#%s",clazz,method));
                     t.run(clazz,method);
                     String path=JacoconutX.output;
                     FileWriter writer=new FileWriter(Paths.get(p,path).toFile(),true);
                     writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"line_coverage"));
                     writer.flush();
                     writer.close();
+                    logger.info(String.format("finish test:%s#%s",clazz,method));
                 }
                 StorageHandler.resetProbe();
             }

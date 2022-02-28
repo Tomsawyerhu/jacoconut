@@ -37,5 +37,4 @@ public class NaiveStatementCoverageMethodAdapter extends MethodVisitor {
                 "externX/JacoconutX", "executeLines",
                 "(Ljava/lang/String;I)V");
     }
-
 }
