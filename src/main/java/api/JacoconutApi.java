@@ -77,9 +77,7 @@ public class JacoconutApi {
 
     public static void lineCoverageProbes(String project,LCType lcType) throws IOException{
         for(String classFile:findAllClassFiles(Paths.get(project,"target","classes"))){
-            logger.info("start "+classFile);
             lineCoverageProbe(classFile,lcType);
-            logger.info("finish "+classFile);
         }
     }
 

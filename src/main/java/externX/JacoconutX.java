@@ -3,11 +3,14 @@ package externX;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class JacoconutX {
 
     private static JacoconutX jacoconutX = null;
     public static final String output="./probe_info.jcn";
+    private Set<String> tokens=new HashSet<>();
 
     private JacoconutX() {
     }
@@ -20,6 +23,9 @@ public class JacoconutX {
     }
 
     public void executeLines(String callsite,int line) throws IOException {
+        String token=callsite+"#"+line;
+        if(tokens.contains(token))return;
+
         File file=new File(output);
         boolean flag;
         if(!file.exists()){
@@ -29,9 +35,10 @@ public class JacoconutX {
         }
         if(flag){
             FileWriter fw=new FileWriter(file,true);
-            fw.append(callsite).append(" ").append(String.valueOf(line)).append("\n");
+            fw.append(token).append("\n");
             fw.flush();
             fw.close();
+            tokens.add(token);
         }
     }
 }

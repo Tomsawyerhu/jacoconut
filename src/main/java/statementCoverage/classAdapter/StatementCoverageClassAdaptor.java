@@ -24,6 +24,6 @@ public class StatementCoverageClassAdaptor extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor methodVisitor = this.cv.visitMethod(access, name, desc, signature, exceptions);
-        return StatementCoverageMethodAdapterFactory.getMethodVisitor(methodVisitorType, this.name,name, methodVisitor);
+        return StatementCoverageMethodAdapterFactory.getMethodVisitor(methodVisitorType, this.name,name+"#"+desc, methodVisitor);
     }
 }

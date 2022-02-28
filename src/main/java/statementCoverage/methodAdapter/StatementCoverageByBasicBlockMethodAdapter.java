@@ -242,7 +242,7 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
         this.domain.endRanges();
         for (Domain.Range range:this.domain.ranges){
             if(range.left<=range.right&&range.left>0){
-                insertProbe(name,range.left, range.right-range.left+1);
+                insertProbe(name,range.left, range.values.size());
             }
         }
 
