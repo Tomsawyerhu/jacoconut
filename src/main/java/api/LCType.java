@@ -5,5 +5,5 @@ package api;
  */
 public enum LCType {
     NAIVE,
-    BASIC_BLOCK_RECORD
+    BASIC_BLOCK
 }

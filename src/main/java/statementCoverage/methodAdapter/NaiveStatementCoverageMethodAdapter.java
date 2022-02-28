@@ -12,12 +12,14 @@ import storage.Storage;
  */
 public class NaiveStatementCoverageMethodAdapter extends MethodVisitor {
     Logger logger = Logger.getLogger(NaiveStatementCoverageMethodAdapter.class);
+    String className;
     String name;
 
 
-    protected NaiveStatementCoverageMethodAdapter(MethodVisitor m, String n) {
+    protected NaiveStatementCoverageMethodAdapter(MethodVisitor m, String n1,String n2) {
         super(458752,m);
-        name = n;
+        className=n1;
+        name = n2;
     }
 
     @Override
@@ -26,12 +28,14 @@ public class NaiveStatementCoverageMethodAdapter extends MethodVisitor {
         int currentLines= Storage.lines.get();
         Storage.lines.set(currentLines+1);
         this.visitMethodInsn(Opcodes.INVOKESTATIC,
-                "utils/Tracer", "getInstance", "()L"
-                        + "utils/Tracer" + ";");
+                "externX/JacoconutX", "getInstance", "()L"
+                        + "externX/JacoconutX" + ";");
+        String callsite=className+"#"+name+"#"+line;
+        mv.visitLdcInsn(callsite);
         mv.visitLdcInsn(1);
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                "utils/Tracer", "executeLines2",
-                "(I)V");
+                "externX/JacoconutX", "executeLines",
+                "(Ljava/lang/String;I)V");
     }
 
 }

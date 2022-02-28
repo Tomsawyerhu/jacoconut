@@ -10,8 +10,9 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Storage {
     public static AtomicReference<Integer> lines = new AtomicReference<Integer>(
             0);
-    public static AtomicReference<Integer> executeLines = new AtomicReference<Integer>(
-            0);
     public static AtomicReference<ConcurrentMap<String, List<Pair<Integer,Integer>>>> probes = new AtomicReference<>(
             new ConcurrentHashMap<>());
+
+
+
 }

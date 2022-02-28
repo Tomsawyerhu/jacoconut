@@ -42,6 +42,7 @@ import java.util.*;
 public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
     Logger logger = Logger.getLogger(StatementCoverageByBasicBlockMethodAdapter.class);
     String name;
+    String className;
 
     Set<Label> handlers=new HashSet<>();
     Set<Label> ends=new HashSet<>();
@@ -132,9 +133,10 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
         }
     }
 
-    protected StatementCoverageByBasicBlockMethodAdapter(MethodVisitor m, String n) {
+    protected StatementCoverageByBasicBlockMethodAdapter(MethodVisitor m, String n1,String n2) {
         super(458752,m);
-        name = n;
+        name = n2;
+        this.className=n1;
     }
 
     @Override
@@ -232,7 +234,7 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
     @Override
     public void visitEnd() {
         super.visitEnd();
-        this.domain.borders.sort((o1, o2) -> Integer.compare(o1.value, o2.value));
+        this.domain.borders.sort(Comparator.comparingInt(o -> o.value));
         this.domain.initRanges();
         for(Integer line:lines){
             this.domain.addLine(line);
@@ -240,16 +242,14 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
         this.domain.endRanges();
         for (Domain.Range range:this.domain.ranges){
             if(range.left<=range.right&&range.left>0){
-                insertProbe(range.left, range.right-range.left+1);
+                insertProbe(name,range.left, range.right-range.left+1);
             }
         }
 
     }
 
-    private void insertProbe(int left, int line){
-        Tracer.executeLines(left,line,name);
-        int i= Storage.lines.get();
-        Storage.lines.set(i+line);
+    private void insertProbe(String methodName, int start, int line){
+        Tracer.executeLines(methodName,start,line);
     }
 
     /**
@@ -260,13 +260,15 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
      * which line has been executed during runtime
      */
     public static class StatementCoverageMethodAdapterExecutor extends MethodVisitor{
+        String className;
         String name;
         boolean isTarget=false;
         List<Pair<Integer,Integer>> probes=null;
 
-        protected StatementCoverageMethodAdapterExecutor(MethodVisitor m, String n) {
+        protected StatementCoverageMethodAdapterExecutor(MethodVisitor m, String n1,String n2) {
             super(458752,m);
-            this.name=n;
+            this.className=n1;
+            this.name=n2;
         }
 
         @Override
@@ -282,21 +284,22 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
             if(isTarget){
                 for(Pair<Integer,Integer> pair:probes){
                     if(line == (int) pair.a + pair.b - 1){
-                        insertRightProbe(pair.b);
+                        insertRightProbe(className+"#"+name+"#"+pair.a,pair.b);
                         break;
                     }
                 }
             }
         }
 
-        private void insertRightProbe(int lines){
+        private void insertRightProbe(String callsite,int lines){
             this.visitMethodInsn(Opcodes.INVOKESTATIC,
-                    "utils/Tracer", "getInstance", "()L"
-                            + "utils/Tracer" + ";");
+                    "externX/JacoconutX", "getInstance", "()L"
+                            + "externX/JacoconutX" + ";");
+            mv.visitLdcInsn(callsite);
             mv.visitLdcInsn(lines);
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    "utils/Tracer", "executeLines2",
-                    "(I)V");
+                    "externX/JacoconutX", "executeLines",
+                    "(Ljava/lang/String;I)V");
         }
     }
 }
