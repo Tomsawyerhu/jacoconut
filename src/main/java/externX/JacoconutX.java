@@ -23,7 +23,7 @@ public class JacoconutX {
     }
 
     public void executeLines(String callsite,int line) throws IOException {
-        String token=callsite+"#"+line;
+        String token="StatementCoverageToken:"+callsite+"#"+line;
         if(tokens.contains(token))return;
 
         File file=new File(output);
@@ -35,10 +35,49 @@ public class JacoconutX {
         }
         if(flag){
             FileWriter fw=new FileWriter(file,true);
-            fw.append(token).append("\n");
+            fw.append(callsite).append("#").append(String.valueOf(line)).append("\n");
             fw.flush();
             fw.close();
             tokens.add(token);
+        }
+    }
+
+    //goto switch
+    public void executeBranch(String callsite,int branchId,int which) throws IOException {
+        String token="BranchCoverageToken:"+callsite+"#"+branchId+"#"+which;
+        if(tokens.contains(token))return;
+
+        File file=new File(output);
+        boolean flag;
+        if(!file.exists()){
+            flag=file.createNewFile();
+        }else{
+            flag=file.isFile()&& file.canWrite();
+        }
+        if(flag){
+            FileWriter fw=new FileWriter(file,true);
+            fw.append(callsite).append("#").append(String.valueOf(branchId)).append("#").append(String.valueOf(which)).append("\n");
+            fw.flush();
+            fw.close();
+            tokens.add(token);
+        }
+    }
+
+    //if else
+    public void executeBranch(String callsite,int branchId,String which) throws IOException {
+
+        File file=new File(output);
+        boolean flag;
+        if(!file.exists()){
+            flag=file.createNewFile();
+        }else{
+            flag=file.isFile()&& file.canWrite();
+        }
+        if(flag){
+            FileWriter fw=new FileWriter(file,true);
+            fw.append(callsite).append("#").append(String.valueOf(branchId)).append("#").append(String.valueOf(which)).append("\n");
+            fw.flush();
+            fw.close();
         }
     }
 }

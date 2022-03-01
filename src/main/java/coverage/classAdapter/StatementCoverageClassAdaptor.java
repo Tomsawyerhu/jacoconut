@@ -1,8 +1,8 @@
-package statementCoverage.classAdapter;
+package coverage.classAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
-import statementCoverage.methodAdapter.SCType;
-import statementCoverage.methodAdapter.StatementCoverageMethodAdapterFactory;
+import coverage.methodAdapter.SCType;
+import coverage.methodAdapter.StatementCoverageMethodAdapterFactory;
 
 
 public class StatementCoverageClassAdaptor extends ClassVisitor {

@@ -1,4 +1,4 @@
-package statementCoverage.methodAdapter;
+package coverage.methodAdapter;
 
 public enum SCType {
     NAIVE,

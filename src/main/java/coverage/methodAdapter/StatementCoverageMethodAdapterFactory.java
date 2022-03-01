@@ -1,4 +1,4 @@
-package statementCoverage.methodAdapter;
+package coverage.methodAdapter;
 
 
 import org.objectweb.asm.MethodVisitor;

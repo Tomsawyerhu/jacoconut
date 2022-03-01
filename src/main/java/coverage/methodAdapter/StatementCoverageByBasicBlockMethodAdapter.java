@@ -1,4 +1,4 @@
-package statementCoverage.methodAdapter;
+package coverage.methodAdapter;
 
 import com.github.javaparser.utils.Pair;
 import org.apache.log4j.Logger;
@@ -84,11 +84,9 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
          */
         public void initRanges(){
             int size=borders.size();
-            if(size>=2){
-                while(size>=2){
-                    size-=1;
-                    this.ranges.add(new Range());
-                }
+            while(size>=2){
+                size-=1;
+                this.ranges.add(new Range());
             }
         }
 
@@ -282,12 +280,20 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
         public void visitLineNumber(int line, Label start) {
             super.visitLineNumber(line, start);
             if(isTarget){
-                for(Pair<Integer,Integer> pair:probes){
-                    if(line == (int) pair.a + pair.b - 1){
+                boolean flag=false;
+                int i=0;
+                for(;i<probes.size();i+=1){
+                    Pair<Integer,Integer> pair=probes.get(i);
+                    if(line == pair.a ){
                         insertRightProbe(className+"#"+name+"#"+pair.a,pair.b);
+                        flag=true;
                         break;
                     }
                 }
+                if(flag){
+                    probes.remove(i);
+                }
+
             }
         }
 

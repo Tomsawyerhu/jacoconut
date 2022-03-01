@@ -1,4 +1,4 @@
-package statementCoverage.methodAdapter;
+package coverage.methodAdapter;
 
 import org.apache.log4j.Logger;
 import org.objectweb.asm.Label;
@@ -11,7 +11,7 @@ import storage.Storage;
  * 语句执行前插入探针
  */
 public class NaiveStatementCoverageMethodAdapter extends MethodVisitor {
-    Logger logger = Logger.getLogger(NaiveStatementCoverageMethodAdapter.class);
+    private static Logger logger = Logger.getLogger(NaiveStatementCoverageMethodAdapter.class);
     String className;
     String name;
 
