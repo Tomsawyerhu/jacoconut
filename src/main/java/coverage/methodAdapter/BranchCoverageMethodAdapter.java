@@ -11,13 +11,13 @@ import java.util.*;
 
 public class BranchCoverageMethodAdapter extends MethodVisitor {
     private static Logger logger = Logger.getLogger(BranchCoverageMethodAdapter.class);
-    private String className;
-    private String methodName;
+    private final String className;
+    private final String methodName;
     private int line=-1;
 
     private Map<Label,Pair<Integer,Integer>> switchLabels = new HashMap<>();
-    private int branchId=0;
-    List<BranchStruct> branchList=new ArrayList<>();
+    private static int branchId=0;
+    public static List<BranchStruct> branchList=new ArrayList<>();
 
     public BranchCoverageMethodAdapter(MethodVisitor mv,String n1,String n2) {
         super(458752,mv);
@@ -38,7 +38,7 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
             mv.visitLdcInsn(switchLabels.get(label).b);
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                     "externX/JacoconutX", "executeBranch",
-                    "(Ljava/lang/String;I;I)V");
+                    "(Ljava/lang/String;II)V");
         }
     }
 
@@ -62,7 +62,7 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
             mv.visitLdcInsn(which);
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                     "externX/JacoconutX", "executeBranch",
-                    "(Ljava/lang/String;I;I)V");
+                    "(Ljava/lang/String;II)V");
 
             mv.visitJumpInsn(opcode, label);
             return;
@@ -86,10 +86,10 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
                         + "externX/JacoconutX" + ";");
         mv.visitLdcInsn(callsite);
         mv.visitLdcInsn(branchId);
-        mv.visitLdcInsn("false");
+        mv.visitLdcInsn(false);
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                 "externX/JacoconutX", "executeBranch",
-                "(Ljava/lang/String;I;Ljava/lang/String)V");
+                "(Ljava/lang/String;IZ)V");
 
         mv.visitJumpInsn(opcode, label);
 
@@ -98,11 +98,12 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
                         + "externX/JacoconutX" + ";");
         mv.visitLdcInsn(callsite);
         mv.visitLdcInsn(branchId);
-        mv.visitLdcInsn("true");
+        mv.visitLdcInsn(true);
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                 "externX/JacoconutX", "executeBranch",
-                "(Ljava/lang/String;I;Ljava/lang/String)V");
+                "(Ljava/lang/String;IZ)V");
     }
+
 
     @Override
     public void visitTableSwitchInsn(int min, int max, Label dflt, Label... labels) {
@@ -123,7 +124,7 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
             which+=1;
         }
         switchLabels.remove(dflt);
-        this.branchList.add(new BranchStruct(branchId,callsite,wheres));
+        branchList.add(new BranchStruct(branchId,callsite,wheres));
 
         super.visitTableSwitchInsn(min, max, dflt, labels);
     }
@@ -147,7 +148,7 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
             which+=1;
         }
         switchLabels.remove(dflt);
-        this.branchList.add(new BranchStruct(branchId,callsite,wheres));
+        branchList.add(new BranchStruct(branchId,callsite,wheres));
         super.visitLookupSwitchInsn(dflt, keys, labels);
     }
 
@@ -159,12 +160,13 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
 
     @Override
     public void visitMaxs(int maxStack, int maxLocals) {
-        super.visitMaxs(maxStack, maxLocals);
+        super.visitMaxs(maxStack+4, maxLocals);
     }
 
     @Override
-    public void visitEnd() {
-        super.visitEnd();
+    public void visitCode() {
+        this.switchLabels.clear();
+        super.visitCode();
     }
 
     public static class BranchStruct{

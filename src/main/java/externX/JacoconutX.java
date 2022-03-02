@@ -10,7 +10,7 @@ public class JacoconutX {
 
     private static JacoconutX jacoconutX = null;
     public static final String output="./probe_info.jcn";
-    private Set<String> tokens=new HashSet<>();
+    private static Set<String> tokens=new HashSet<>();
 
     private JacoconutX() {
     }
@@ -64,7 +64,7 @@ public class JacoconutX {
     }
 
     //if else
-    public void executeBranch(String callsite,int branchId,String which) throws IOException {
+    public void executeBranch(String callsite,int branchId,boolean which) throws IOException {
 
         File file=new File(output);
         boolean flag;
@@ -75,7 +75,7 @@ public class JacoconutX {
         }
         if(flag){
             FileWriter fw=new FileWriter(file,true);
-            fw.append(callsite).append("#").append(String.valueOf(branchId)).append("#").append(String.valueOf(which)).append("\n");
+            fw.append(callsite).append("#").append(String.valueOf(branchId)).append("#").append(which?"true":"false").append("\n");
             fw.flush();
             fw.close();
         }
