@@ -27,14 +27,14 @@ public class Tracer {
     /*
      * 记录探针位置
      */
-    public static void executeLines(String methodName, int start, int line) {
+    public static void executeLines(String classMethodName, int start, int line) {
         ConcurrentMap<String, List<Pair<Integer, Integer>>> map= Storage.probes.get();
-        if(map.containsKey(methodName)){
-            map.get(methodName).add(new Pair<>(start,line));
+        if(map.containsKey(classMethodName)){
+            map.get(classMethodName).add(new Pair<>(start,line));
         }else{
             List<Pair<Integer, Integer>> list= new ArrayList<>();
             list.add(new Pair<>(start,line));
-            map.put(methodName,list);
+            map.put(classMethodName,list);
         }
     }
 

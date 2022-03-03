@@ -240,14 +240,14 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
         this.domain.endRanges();
         for (Domain.Range range:this.domain.ranges){
             if(range.left<=range.right&&range.left>0){
-                insertProbe(name,range.left, range.values.size());
+                insertProbe(className+"#"+name,range.left, range.values.size());
             }
         }
 
     }
 
-    private void insertProbe(String methodName, int start, int line){
-        Tracer.executeLines(methodName,start,line);
+    private void insertProbe(String classMethodName, int start, int line){
+        Tracer.executeLines(classMethodName,start,line);
     }
 
     /**
@@ -272,7 +272,8 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
         @Override
         public void visitCode() {
             super.visitCode();
-            isTarget= Storage.probes.get().containsKey(this.name);
+            String classMethod=this.className+"#"+this.name;
+            isTarget= Storage.probes.get().containsKey(classMethod);
             probes= Storage.probes.get().get(this.name);
         }
 
