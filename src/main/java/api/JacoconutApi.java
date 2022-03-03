@@ -8,8 +8,7 @@ import org.apache.maven.it.VerificationException;
 import org.apache.maven.it.Verifier;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
-import coverage.classAdapter.BranchCoverageClassAdapter;
-import coverage.classAdapter.StatementCoverageClassAdaptor;
+import coverage.classAdapter.CoverageClassAdapter;
 import coverage.methodAdapter.SCType;
 import storage.Storage;
 import storage.StorageHandler;
@@ -25,44 +24,15 @@ import java.util.stream.Collectors;
 
 public class JacoconutApi {
     private static Logger logger= Logger.getLogger(JacoconutApi.class);
-    public static void lineCoverageProbe(String classFile) throws IOException {
-        lineCoverageProbe(classFile,LCType.NAIVE);
-    }
 
-    public static void lineCoverageProbe(String classFile,LCType lcType) throws IOException {
+    public static void lineCoverageProbe(String classFile) throws IOException {
         FileInputStream inputStream=new FileInputStream(classFile);
         ClassReader cr=new ClassReader(inputStream);
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        StatementCoverageClassAdaptor classVisitor;
-        if(lcType==LCType.NAIVE){
-            classVisitor = new StatementCoverageClassAdaptor(cw, SCType.NAIVE);
-        }else if(lcType==LCType.BASIC_BLOCK){
-            classVisitor = new StatementCoverageClassAdaptor(cw, SCType.BASIC_BLOCK_RECORD);
-        }else{
-            inputStream.close();
-            return;
-        }
+        CoverageClassAdapter classVisitor;
+        classVisitor = new CoverageClassAdapter(cw, SCType.STATEMENT_NAIVE);
         cr.accept(classVisitor, ClassReader.SKIP_FRAMES);
         inputStream.close();
-        if(lcType==LCType.NAIVE){
-            //write
-            byte[] data = cw.toByteArray();
-            FileOutputStream fos = new FileOutputStream(classFile);
-            fos.write(data);
-            fos.flush();
-            fos.close();
-            return;
-        }
-
-        inputStream=new FileInputStream(classFile);
-        cr=new ClassReader(inputStream);
-
-        cw=new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        StatementCoverageClassAdaptor classVisitor2 = new StatementCoverageClassAdaptor(cw,SCType.BASIC_BLOCK_EXEC);
-        cr.accept(classVisitor2, ClassReader.SKIP_FRAMES);
-
-        inputStream.close();
-        //write
         byte[] data = cw.toByteArray();
         FileOutputStream fos = new FileOutputStream(classFile);
         fos.write(data);
@@ -76,17 +46,11 @@ public class JacoconutApi {
         }
     }
 
-    public static void lineCoverageProbes(String project,LCType lcType) throws IOException{
-        for(String classFile:findAllClassFiles(Paths.get(project,"target","classes"))){
-            lineCoverageProbe(classFile,lcType);
-        }
-    }
-
     public static void branchCoverageProbe(String classFile) throws IOException {
         FileInputStream inputStream=new FileInputStream(classFile);
         ClassReader cr=new ClassReader(inputStream);
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        BranchCoverageClassAdapter branchCoverageClassAdapter=new BranchCoverageClassAdapter(cw);
+        CoverageClassAdapter branchCoverageClassAdapter=new CoverageClassAdapter(cw,SCType.BRANCH);
         cr.accept(branchCoverageClassAdapter,ClassReader.SKIP_FRAMES);
         inputStream.close();
         byte[] data = cw.toByteArray();
@@ -161,7 +125,7 @@ public class JacoconutApi {
         logger.info("compile done!");
         try {
             logger.info("modify bytecode...");
-            lineCoverageProbes(p,LCType.BASIC_BLOCK);
+            lineCoverageProbes(p);
             logger.info("modify bytecode done!");
             logger.info("copy class file...");
             preparation2(p);

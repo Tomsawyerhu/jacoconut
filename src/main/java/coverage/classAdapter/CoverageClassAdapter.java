@@ -2,14 +2,14 @@ package coverage.classAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import coverage.methodAdapter.SCType;
-import coverage.methodAdapter.StatementCoverageMethodAdapterFactory;
+import coverage.methodAdapter.CoverageMethodAdapterFactory;
 
 
-public class StatementCoverageClassAdaptor extends ClassVisitor {
+public class CoverageClassAdapter extends ClassVisitor {
     private final SCType methodVisitorType;
     private String name;
 
-    public StatementCoverageClassAdaptor(ClassVisitor cv, SCType scType) {
+    public CoverageClassAdapter(ClassVisitor cv, SCType scType) {
         super(458752,cv);
         this.methodVisitorType = scType;
     }
@@ -23,7 +23,7 @@ public class StatementCoverageClassAdaptor extends ClassVisitor {
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        MethodVisitor methodVisitor = this.cv.visitMethod(access, name, desc, signature, exceptions);
-        return StatementCoverageMethodAdapterFactory.getMethodVisitor(methodVisitorType, this.name,name+"#"+desc, methodVisitor);
+        MethodVisitor methodVisitor = super.visitMethod(access, name, desc, signature, exceptions);
+        return CoverageMethodAdapterFactory.getMethodVisitor(methodVisitorType, this.name,name+"#"+desc, methodVisitor);
     }
 }

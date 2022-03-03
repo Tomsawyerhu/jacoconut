@@ -39,13 +39,13 @@ import java.util.*;
  * visitTryCatchBlockAnnotation must be called after the corresponding try catch block has been visited,
  * and the visitLocalVariable, visitLocalVariableAnnotation and visitLineNumber methods must be called after the labels passed as arguments have been visited.
  */
-public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
-    Logger logger = Logger.getLogger(StatementCoverageByBasicBlockMethodAdapter.class);
+public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
+    Logger logger = Logger.getLogger(BasicBlockRecoderMethodAdapter.class);
     String name;
     String className;
 
-    Set<Label> handlers=new HashSet<>();
-    Set<Label> ends=new HashSet<>();
+//    Set<Label> handlers=new HashSet<>();
+//    Set<Label> ends=new HashSet<>();
     Set<Integer> lines=new HashSet<>();
     Domain domain=new Domain();
     int line=-1;
@@ -131,7 +131,7 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
         }
     }
 
-    protected StatementCoverageByBasicBlockMethodAdapter(MethodVisitor m, String n1,String n2) {
+    protected BasicBlockRecoderMethodAdapter(MethodVisitor m, String n1, String n2) {
         super(458752,m);
         name = n2;
         this.className=n1;
@@ -203,31 +203,31 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
     /*
      * mark catch clause
      */
-    @Override
-    public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
-        super.visitTryCatchBlock(start, end, handler, type);
-        this.handlers.add(handler);
-        this.ends.add(end);
-    }
+//    @Override
+//    public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
+//        super.visitTryCatchBlock(start, end, handler, type);
+//        this.handlers.add(handler);
+//        this.ends.add(end);
+//    }
 
     /*
      * meet recorded exception handler/end,then record its lineNumber
      */
-    @Override
-    public void visitLabel(Label label) {
-        super.visitLabel(label);
-        //add borders
-        if(this.handlers.contains(label)||this.ends.contains(label)){
-            Field line;
-            try {
-                line = label.getClass().getDeclaredField("lineNumber");
-                line.setAccessible(true);
-                this.domain.borders.add(new Domain.Border(line.getInt(label),true));
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+//    @Override
+//    public void visitLabel(Label label) {
+//        super.visitLabel(label);
+//        //add borders
+//        if(this.handlers.contains(label)||this.ends.contains(label)){
+//            Field line;
+//            try {
+//                line = label.getClass().getDeclaredField("lineNumber");
+//                line.setAccessible(true);
+//                this.domain.borders.add(new Domain.Border(line.getInt(label),true));
+//            } catch (NoSuchFieldException | IllegalAccessException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
     @Override
     public void visitEnd() {
@@ -257,13 +257,13 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
      * StatementCoverageMethodAdapterExecutor will modify bytecode to see
      * which line has been executed during runtime
      */
-    public static class StatementCoverageMethodAdapterExecutor extends MethodVisitor{
+    public static class StatementCoverageMethodAdapter extends MethodVisitor{
         String className;
         String name;
         boolean isTarget=false;
         List<Pair<Integer,Integer>> probes=null;
 
-        protected StatementCoverageMethodAdapterExecutor(MethodVisitor m, String n1,String n2) {
+        protected StatementCoverageMethodAdapter(MethodVisitor m, String n1, String n2) {
             super(458752,m);
             this.className=n1;
             this.name=n2;
