@@ -274,7 +274,7 @@ public class StatementCoverageByBasicBlockMethodAdapter extends MethodVisitor {
             super.visitCode();
             String classMethod=this.className+"#"+this.name;
             isTarget= Storage.probes.get().containsKey(classMethod);
-            probes= Storage.probes.get().get(this.name);
+            probes= Storage.probes.get().get(classMethod);
         }
 
         @Override
