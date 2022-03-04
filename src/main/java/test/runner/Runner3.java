@@ -1,6 +1,8 @@
 package test.runner;
 
+import algorithm.cfg;
 import coverage.classAdapter.CoverageClassAdapter;
+import coverage.methodAdapter.PathCoverageMethodAdapter;
 import coverage.methodAdapter.SCType;
 import org.objectweb.asm.ClassReader;
 import storage.Storage;
@@ -31,7 +33,16 @@ public class Runner3 {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(Storage.cfgs.get().size());
+        int i=1;
+        for(PathCoverageMethodAdapter.CfgMethodAdapter.ControlFlowGraph c:Storage.cfgs.get()){
+            String fileName="pic"+i;
+            try {
+                cfg.cfgDrawer(c,"D:/"+fileName);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            i+=1;
+        }
 
     }
 }

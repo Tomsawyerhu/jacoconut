@@ -50,8 +50,9 @@ public class PathCoverageMethodAdapter {
             try {
                 line = label.getClass().getDeclaredField("lineNumber");
                 line.setAccessible(true);
+                int lvalue=line.getInt(label);
                 //add flow releation
-                bbRelations.add(new Flow(this.line,line.getInt(label),opcode==org.objectweb.asm.Opcodes.GOTO));
+                bbRelations.add(new Flow(this.line,lvalue==0?this.line:lvalue,opcode==org.objectweb.asm.Opcodes.GOTO));
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 e.printStackTrace();
             }
@@ -135,7 +136,7 @@ public class PathCoverageMethodAdapter {
                     for(int j=0;j<bbsize;j+=1){
                         for(Flow flow: bbRelations){
                             if(flow.start==bbs.get(i).blockId&&flow.end==bbs.get(j).blockId){
-                                if(flow.must)flows[i][j]=2; // 非条件跳转
+                                if(flow.must&&flows[i][j]==0)flows[i][j]=2; // 非条件跳转(当非条件跳转与条件跳转并存时，视为条件跳转。e.g. ?:操作符)
                                 else flows[i][j]=1; // 条件跳转
                             }
                         }

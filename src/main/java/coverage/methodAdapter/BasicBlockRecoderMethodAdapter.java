@@ -156,7 +156,9 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
         for(Label label:labels)try {
             Field line=label.getClass().getDeclaredField("lineNumber");
             line.setAccessible(true);
-            this.domain.borders.add(new Domain.Border(line.getInt(label),true));
+            //忽略写在同一行的情况(switch a{case 0})
+            int lvalue=line.getInt(label);
+            if(lvalue>0)this.domain.borders.add(new Domain.Border(lvalue,true));
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -169,7 +171,9 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
         for(Label label:labels)try {
             Field line=label.getClass().getDeclaredField("lineNumber");
             line.setAccessible(true);
-            this.domain.borders.add(new Domain.Border(line.getInt(label),true));
+            int lvalue=line.getInt(label);
+            //忽略写在同一行的情况(switch a{case 0})
+            if(lvalue>0)this.domain.borders.add(new Domain.Border(lvalue,true));
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -180,14 +184,18 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
         super.visitJumpInsn(opcode, label);
         //if、goto指令
         //add borders
+        boolean jumpToSelf=false;
         try {
             Field line=label.getClass().getDeclaredField("lineNumber");
             line.setAccessible(true);
-            this.domain.borders.add(new Domain.Border(line.getInt(label),true));
+            int lvalue=line.getInt(label);
+            jumpToSelf=(lvalue<=0);
+            //忽略三目操作符 ?:
+            if(!jumpToSelf)this.domain.borders.add(new Domain.Border(lvalue,true));
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
-        this.domain.borders.add(new Domain.Border(this.line,false));
+        if(!jumpToSelf)this.domain.borders.add(new Domain.Border(this.line,false));
     }
 
     @Override
