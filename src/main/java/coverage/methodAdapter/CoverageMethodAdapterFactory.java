@@ -9,8 +9,8 @@ public class CoverageMethodAdapterFactory {
     public static MethodVisitor getMethodVisitor(SCType scType, String className,String methodName, MethodVisitor after){
         if(scType==SCType.BASIC_BLOCK_RECORD){
             return new BasicBlockRecoderMethodAdapter(after,className,methodName);
-        }else if(scType==SCType.STATEMENT_BASIC_BLOCK){
-            return new BasicBlockRecoderMethodAdapter.StatementCoverageMethodAdapter(after,className,methodName);
+        }else if(scType==SCType.BASIC_BLOCK_EXEC){
+            return new BasicBlockRecoderMethodAdapter.BasicBlockExecuterMethodAdapter(after,className,methodName);
         }else if(scType==SCType.STATEMENT_NAIVE){
             return new NaiveStatementCoverageMethodAdapter(after,className,methodName);
         }else if(scType==SCType.BRANCH){

@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import storage.StorageHandler;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -45,25 +46,9 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
     @Override
     public void visitJumpInsn(int opcode, Label label) {
         String callsite=this.className+"#"+this.methodName;
-        int which;
 
         if (opcode == org.objectweb.asm.Opcodes.GOTO) {
-            //收集分支
-            branchId+=1;
-            branchList.add(new BranchStruct(branchId,callsite,new int[]{line}));
-
-            //修改字节码
-            which=0;
-            this.visitMethodInsn(Opcodes.INVOKESTATIC,
-                    "externX/JacoconutX", "getInstance", "()L"
-                            + "externX/JacoconutX" + ";");
-            mv.visitLdcInsn(callsite);
-            mv.visitLdcInsn(branchId);
-            mv.visitLdcInsn(which);
-            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    "externX/JacoconutX", "executeBranch",
-                    "(Ljava/lang/String;II)V");
-
+            //忽略goto
             mv.visitJumpInsn(opcode, label);
             return;
         }
@@ -169,13 +154,19 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
         super.visitCode();
     }
 
+    @Override
+    public void visitEnd() {
+        super.visitEnd();
+        StorageHandler.setBranch(className+"#"+methodName,branchList);
+    }
+
     public static class BranchStruct{
         //unique for a branch
-        int branchId=-1;
+        int branchId;
         //class#method
-        String callsite="";
+        String callsite;
         //mark lines where it jumps to
-        int[] wheres =new int[0];
+        int[] wheres;
 
         public BranchStruct(int branchId, String callsite, int[] wheres) {
             this.branchId = branchId;

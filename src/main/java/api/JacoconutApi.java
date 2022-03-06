@@ -1,5 +1,7 @@
 package api;
 
+import algorithm.cfg;
+import coverage.methodAdapter.PathCoverageMethodAdapter;
 import externX.JacoconutX;
 import junit.TestDetector;
 import junit.TestDriver;
@@ -12,7 +14,6 @@ import coverage.classAdapter.CoverageClassAdapter;
 import coverage.methodAdapter.SCType;
 import storage.Storage;
 import storage.StorageHandler;
-import utils.Calculator;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -66,6 +67,67 @@ public class JacoconutApi {
         }
     }
 
+
+    public static void pathCoverageProbe(String classFile){
+        FileInputStream inputStream= null;
+        try {
+            inputStream = new FileInputStream(classFile);
+            ClassReader cr=new ClassReader(inputStream);
+            CoverageClassAdapter coverageClassAdapter=new CoverageClassAdapter(null,SCType.BASIC_BLOCK_RECORD);
+            cr.accept(coverageClassAdapter,ClassReader.SKIP_FRAMES);
+            inputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            inputStream = new FileInputStream(classFile);
+            ClassReader cr=new ClassReader(inputStream);
+            CoverageClassAdapter coverageClassAdapter=new CoverageClassAdapter(null,SCType.BASIC_BLOCK_CFG);
+            cr.accept(coverageClassAdapter,ClassReader.SKIP_FRAMES);
+            inputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            inputStream = new FileInputStream(classFile);
+            ClassReader cr=new ClassReader(inputStream);
+            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            CoverageClassAdapter coverageClassAdapter=new CoverageClassAdapter(cw,SCType.BASIC_BLOCK_EXEC);
+            cr.accept(coverageClassAdapter,ClassReader.SKIP_FRAMES);
+            inputStream.close();
+            byte[] data = cw.toByteArray();
+            FileOutputStream fos = new FileOutputStream(classFile);
+            fos.write(data);
+            fos.flush();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void pathCoverageProbes(String project) throws IOException {
+        for(String classFile:findAllClassFiles(Paths.get(project,"target","classes"))){
+            pathCoverageProbe(classFile);
+        }
+
+        cfg.CfgPathOptions options=new cfg.CfgPathOptions();
+        options.limit_path_length=100;
+        int i=1;
+        for(PathCoverageMethodAdapter.CfgMethodAdapter.ControlFlowGraph c: Storage.cfgs.get()){
+            try {
+                cfg.cfgDrawer(c,Paths.get(project,"pic"+i+".png").toAbsolutePath().toString());
+                String key=c.className+"#"+c.methodName;
+                StorageHandler.setPath(key,cfg.cfgPaths(c,options));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            i+=1;
+        }
+    }
+
+
     public static void preparation1(String project) throws VerificationException {
         //编译
         Verifier v=new Verifier(project);
@@ -106,19 +168,7 @@ public class JacoconutApi {
         }
     }
 
-    public static double calculateCoverage(){
-        return Calculator.calculateStatementCoverage();
-    }
-
-    /*
-     * for test
-     */
-    public static int getLine(){
-        return Storage.lines.get();
-    }
-
     public static void lineCoverage(String project) throws  VerificationException {
-//        String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-cli-cli-1.4";
         String p=project;
         logger.info("ready to compile...");
         preparation1(p);
@@ -149,7 +199,6 @@ public class JacoconutApi {
                     writer.close();
                     logger.info(String.format("finish test:%s#%s",clazz,method));
                 }
-                StorageHandler.resetProbe();
             }
         } catch (IOException | VerificationException e) {
             e.printStackTrace();
@@ -187,7 +236,43 @@ public class JacoconutApi {
                     writer.close();
                     logger.info(String.format("finish test:%s#%s",clazz,method));
                 }
-                StorageHandler.resetProbe();
+            }
+        } catch (IOException | VerificationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void pathCoverage(String project) throws  VerificationException {
+        String p=project;
+        logger.info("ready to compile...");
+        preparation1(p);
+        logger.info("compile done!");
+        try {
+            logger.info("modify bytecode...");
+            pathCoverageProbes(p);
+            logger.info("modify bytecode done!");
+            logger.info("copy class file...");
+            preparation2(p);
+            logger.info("copy class file done!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            Map<String,List<String>> m=new TestDetector(p).detectAllJunitTests();
+            TestDriver t=new TestDriver(p);
+
+            for (String clazz:m.keySet()){
+                for(String method:m.get(clazz)){
+                    logger.info(String.format("start test:%s#%s",clazz,method));
+                    t.run(clazz,method);
+                    String path=JacoconutX.output;
+                    FileWriter writer=new FileWriter(Paths.get(p,path).toFile(),true);
+                    writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"path_coverage"));
+                    writer.flush();
+                    writer.close();
+                    logger.info(String.format("finish test:%s#%s",clazz,method));
+                }
             }
         } catch (IOException | VerificationException e) {
             e.printStackTrace();
@@ -197,7 +282,7 @@ public class JacoconutApi {
     public static void main(String[] args) {
         String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-cli-cli-1.4";
         try {
-            lineCoverage(p);
+            pathCoverage(p);
         } catch (VerificationException e) {
             e.printStackTrace();
         }

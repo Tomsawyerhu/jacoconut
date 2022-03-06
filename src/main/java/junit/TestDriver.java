@@ -15,8 +15,12 @@ public class TestDriver {
 
     private TestDriver(){}
 
-    public void run(String clazz, String method) throws VerificationException {
+    public void run(String clazz, String method) {
         if(v.isAutoclean()) v.setAutoclean(false);
-        v.executeGoals(Arrays.asList("surefire:test","-Dtest="+clazz+'#'+method));
+        try {
+            v.executeGoals(Arrays.asList("surefire:test","-Dtest="+clazz+'#'+method));
+        } catch (VerificationException e) {
+            e.printStackTrace();
+        }
     }
 }

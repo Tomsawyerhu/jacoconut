@@ -44,8 +44,7 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
     String name;
     String className;
 
-//    Set<Label> handlers=new HashSet<>();
-//    Set<Label> ends=new HashSet<>();
+    private Map<Label,Integer> labelLines=new HashMap<>(); //label line对应关系
     Set<Integer> lines=new HashSet<>();
     Domain domain=new Domain();
     int line=-1;
@@ -58,9 +57,11 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
         public static class Border{
             public int value;
             public boolean opened;
+            public Label label;
             Border(int value,boolean opened){
                 this.value=value;
                 this.opened=opened;
+                label=null;
             }
 
             @Override
@@ -156,9 +157,11 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
         for(Label label:labels)try {
             Field line=label.getClass().getDeclaredField("lineNumber");
             line.setAccessible(true);
-            //忽略写在同一行的情况(switch a{case 0})
+
             int lvalue=line.getInt(label);
-            if(lvalue>0)this.domain.borders.add(new Domain.Border(lvalue,true));
+            Domain.Border b=new Domain.Border(lvalue,true);
+            b.label=label;
+            this.domain.borders.add(b);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -172,8 +175,10 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
             Field line=label.getClass().getDeclaredField("lineNumber");
             line.setAccessible(true);
             int lvalue=line.getInt(label);
-            //忽略写在同一行的情况(switch a{case 0})
-            if(lvalue>0)this.domain.borders.add(new Domain.Border(lvalue,true));
+
+            Domain.Border b=new Domain.Border(lvalue,true);
+            b.label=label;
+            this.domain.borders.add(new Domain.Border(lvalue,true));
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -184,18 +189,17 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
         super.visitJumpInsn(opcode, label);
         //if、goto指令
         //add borders
-        boolean jumpToSelf=false;
         try {
             Field line=label.getClass().getDeclaredField("lineNumber");
             line.setAccessible(true);
             int lvalue=line.getInt(label);
-            jumpToSelf=(lvalue<=0);
-            //忽略三目操作符 ?:
-            if(!jumpToSelf)this.domain.borders.add(new Domain.Border(lvalue,true));
+            Domain.Border b=new Domain.Border(lvalue,true);
+            b.label=label;
+            this.domain.borders.add(b);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
-        if(!jumpToSelf)this.domain.borders.add(new Domain.Border(this.line,false));
+        this.domain.borders.add(new Domain.Border(this.line,false));
     }
 
     @Override
@@ -208,38 +212,29 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
         }
     }
 
-    /*
-     * mark catch clause
-     */
-//    @Override
-//    public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
-//        super.visitTryCatchBlock(start, end, handler, type);
-//        this.handlers.add(handler);
-//        this.ends.add(end);
-//    }
-
-    /*
-     * meet recorded exception handler/end,then record its lineNumber
-     */
-//    @Override
-//    public void visitLabel(Label label) {
-//        super.visitLabel(label);
-//        //add borders
-//        if(this.handlers.contains(label)||this.ends.contains(label)){
-//            Field line;
-//            try {
-//                line = label.getClass().getDeclaredField("lineNumber");
-//                line.setAccessible(true);
-//                this.domain.borders.add(new Domain.Border(line.getInt(label),true));
-//            } catch (NoSuchFieldException | IllegalAccessException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
+    @Override
+    public void visitLabel(Label label) {
+        Field line= null;
+        try {
+            line = label.getClass().getDeclaredField("lineNumber");
+            line.setAccessible(true);
+            labelLines.putIfAbsent(label,line.getInt(label)==0?this.line:line.getInt(label));
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        super.visitLabel(label);
+    }
 
     @Override
     public void visitEnd() {
         super.visitEnd();
+        //将Label的位置转换为行号
+        for(Domain.Border b:this.domain.borders){
+            if(b.value==0&&b.label!=null){
+                b.value=labelLines.getOrDefault(b.label,0);
+            }
+        }
+
         this.domain.borders.sort(Comparator.comparingInt(o -> o.value));
         this.domain.initRanges();
         for(Integer line:lines){
@@ -265,13 +260,13 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
      * StatementCoverageMethodAdapterExecutor will modify bytecode to see
      * which line has been executed during runtime
      */
-    public static class StatementCoverageMethodAdapter extends MethodVisitor{
+    public static class BasicBlockExecuterMethodAdapter extends MethodVisitor{
         String className;
         String name;
         boolean isTarget=false;
         List<Pair<Integer,Integer>> probes=null;
 
-        protected StatementCoverageMethodAdapter(MethodVisitor m, String n1, String n2) {
+        protected BasicBlockExecuterMethodAdapter(MethodVisitor m, String n1, String n2) {
             super(458752,m);
             this.className=n1;
             this.name=n2;

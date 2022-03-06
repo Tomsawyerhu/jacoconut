@@ -17,8 +17,12 @@ public class PathCoverageMethodAdapter {
         String className;
         String name;
 
+        private Map<Label,Integer> labelLines=new HashMap<>(); //label line对应关系
+
+        private Label lastLabel;
         private int line; //代码行数
-        private List<Flow> bbRelations =new ArrayList<>(); //基本块流向关系
+        private List<Flow> bbFlows =new ArrayList<>(); //基本块流向关系
+        private List<LabelSequence> labelSequences =new ArrayList<>();//顺序关系
         private int headLine; //程序进入点行数
         ControlFlowGraph controlFlowGraph;
 
@@ -39,6 +43,7 @@ public class PathCoverageMethodAdapter {
                 this.headLine=line;
                 isFirst=false;
             }
+
             super.visitLineNumber(line,start);
         }
 
@@ -46,31 +51,15 @@ public class PathCoverageMethodAdapter {
         public void visitJumpInsn(int opcode, Label label) {
             //非条件分支 must=true
             //条件分支 must=false
-            Field line= null;
-            try {
-                line = label.getClass().getDeclaredField("lineNumber");
-                line.setAccessible(true);
-                int lvalue=line.getInt(label);
-                //add flow releation
-                bbRelations.add(new Flow(this.line,lvalue==0?this.line:lvalue,opcode==org.objectweb.asm.Opcodes.GOTO));
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
+
+            bbFlows.add(new Flow(this.line,label,opcode==org.objectweb.asm.Opcodes.GOTO));
             super.visitJumpInsn(opcode, label);
         }
 
         @Override
         public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
             for(Label label:labels){
-                Field line= null;
-                try {
-                    line = label.getClass().getDeclaredField("lineNumber");
-                    line.setAccessible(true);
-                    //add flow releation
-                    bbRelations.add(new Flow(this.line,line.getInt(label),false));
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+                bbFlows.add(new Flow(this.line,label,false));
             }
             super.visitLookupSwitchInsn(dflt, keys, labels);
         }
@@ -78,23 +67,41 @@ public class PathCoverageMethodAdapter {
         @Override
         public void visitTableSwitchInsn(int min, int max, Label dflt, Label... labels) {
             for(Label label:labels){
-                Field line= null;
-                try {
-                    line = label.getClass().getDeclaredField("lineNumber");
-                    line.setAccessible(true);
-                    //add flow releation
-                    bbRelations.add(new Flow(this.line,line.getInt(label),false));
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+                bbFlows.add(new Flow(this.line,label,false));
             }
             super.visitTableSwitchInsn(min, max, dflt, labels);
         }
 
         @Override
+        public void visitLabel(Label label) {
+            super.visitLabel(label);
+            Field line= null;
+            try {
+                //label对应行数
+                line = label.getClass().getDeclaredField("lineNumber");
+                line.setAccessible(true);
+                labelLines.putIfAbsent(label,line.getInt(label)==0?this.line:line.getInt(label));
+                //label顺序关系
+                if(line.getInt(label)!=0){
+                    int lastLabelLine=labelLines.getOrDefault(lastLabel,-1);
+                    if(lastLabelLine>0){
+                        labelSequences.add(new LabelSequence(lastLabelLine,line.getInt(label)));
+                    }
+                }
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            lastLabel=label;
+        }
+
+        @Override
         public void visitEnd() {
+            for(Flow f:bbFlows){
+                f.end = labelLines.getOrDefault((Label) f.end, -1);
+            }
             String classMethod=this.className+"#"+this.name;
             List<Pair<Integer,Integer>> probes= Storage.probes.get().get(classMethod);
+            if(probes==null){super.visitEnd();return;}
             List<BasicBlock> bbs=
                     probes
                     .stream()
@@ -102,15 +109,36 @@ public class PathCoverageMethodAdapter {
                     .sorted(Comparator.comparingInt(BasicBlock::getStartline))
                             .collect(Collectors.toList());
 
-            //至少包含return语句，bbsize is positive
-            int headBlockId=bbs.get(0).blockId;
 
+
+            //至少包含return语句，bbsize is positive
             int bbsize=bbs.size();
             int[][] flows=new int[bbsize][bbsize];
 
             if(bbsize>1){
+                //将labelSequences中的行数替换为blockId
+                for(LabelSequence labelSequence:labelSequences){
+                    boolean startSolved=false;
+                    boolean endSolved=false;
+                    for(int i=0;i<bbsize-1;i+=1){
+                        if(!startSolved&&labelSequence.start>=bbs.get(i).startline&&labelSequence.start<bbs.get(i+1).startline){
+                            labelSequence.start=bbs.get(i).blockId;
+                            startSolved=true;
+                        }
+                        if(!endSolved&& labelSequence.end >=bbs.get(i).startline&&labelSequence.end<bbs.get(i+1).startline){
+                            labelSequence.end=bbs.get(i).blockId;
+                            endSolved=true;
+                        }
+                    }
+                    if(!startSolved){
+                        labelSequence.start=bbs.get(bbsize-1).blockId;
+                    }
+                    if(!endSolved){
+                        labelSequence.end=bbs.get(bbsize-1).blockId;
+                    }
+                }
                 //将flow中的行数替换为blockId
-                for(Flow flow: bbRelations){
+                for(Flow flow: bbFlows){
                     boolean startSolved=false;
                     boolean endSolved=false;
                     for(int i=0;i<bbsize-1;i+=1){
@@ -118,7 +146,7 @@ public class PathCoverageMethodAdapter {
                             flow.setStart(bbs.get(i).blockId);
                             startSolved=true;
                         }
-                        if(!endSolved&&flow.end>=bbs.get(i).startline&&flow.end<bbs.get(i+1).startline){
+                        if(!endSolved&&(int)flow.end>=bbs.get(i).startline&&(int)flow.end<bbs.get(i+1).startline){
                             flow.setEnd(bbs.get(i).blockId);
                             endSolved=true;
                         }
@@ -134,23 +162,31 @@ public class PathCoverageMethodAdapter {
                 //将流向关系填充到矩阵中
                 for(int i=0;i<bbsize;i+=1){
                     for(int j=0;j<bbsize;j+=1){
-                        for(Flow flow: bbRelations){
-                            if(flow.start==bbs.get(i).blockId&&flow.end==bbs.get(j).blockId){
-                                if(flow.must&&flows[i][j]==0)flows[i][j]=2; // 非条件跳转(当非条件跳转与条件跳转并存时，视为条件跳转。e.g. ?:操作符)
+                        for(Flow flow: bbFlows){
+                            if(flow.start==bbs.get(i).blockId&&(int)flow.end==bbs.get(j).blockId){
+                                if(flow.must&&flows[i][j]==0)flows[i][j]=2; // 非条件跳转(当非条件跳转与条件跳转并存时，视为条件跳转(由上下文决定)。e.g. ?:操作符)
                                 else flows[i][j]=1; // 条件跳转
                             }
                         }
                     }
                 }
 
-                //条件跳转，顺序bb之间存在指向关系
-                for(int i=0;i<bbsize-1;i+=1){
-                    boolean noUnconditionalJump=true;
+                //条件跳转，顺序label之间存在指向关系
+                for(int i=0;i<bbsize;i+=1){
+                    boolean noUnconditionalJump=false;
                     for(int j=0;j<bbsize;j+=1){
-                        if(flows[i][j]==2){noUnconditionalJump=false;break;}
+                        if(flows[i][j]==2&&i!=j){noUnconditionalJump=true;break;} //如果存在非条件自环，说明为条件跳转(由上下文决定)
                     }
-                    if(noUnconditionalJump){
-                        flows[i][i+1]=1;
+                    if(!noUnconditionalJump){
+                        for(LabelSequence labelSequence:labelSequences){
+                            if(labelSequence.start==bbs.get(i).blockId){
+                                for(int j=0;j<bbsize-1;j+=1){
+                                    if(labelSequence.end==bbs.get(j).blockId&&i!=j){
+                                        flows[i][j]=1;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -164,7 +200,6 @@ public class PathCoverageMethodAdapter {
 
             this.controlFlowGraph.bbs= bbs;
             this.controlFlowGraph.flows=flows;
-            this.controlFlowGraph.headBlockId=headBlockId;
 
             Storage.cfgs.get().add(this.controlFlowGraph);
 
@@ -192,6 +227,16 @@ public class PathCoverageMethodAdapter {
             }
         }
 
+        public static class LabelSequence{
+            public int start;
+            public int end;
+
+            public LabelSequence(int start, int end) {
+                this.start = start;
+                this.end = end;
+            }
+        }
+
         public static class ControlFlowGraph{
             public String className;
             public String methodName;
@@ -200,18 +245,16 @@ public class PathCoverageMethodAdapter {
                 this.className = className;
                 this.methodName = methodName;
             }
-
-            public int headBlockId;
             public List<BasicBlock> bbs;
             public int[][] flows;
         }
 
         private static class Flow{
             int start;
-            int end;
+            Object end;
             boolean must;
 
-            public Flow(int start, int end, boolean must) {
+            public Flow(int start, Object end, boolean must) {
                 this.start = start;
                 this.end = end;
                 this.must = must;
@@ -221,11 +264,10 @@ public class PathCoverageMethodAdapter {
                 this.start = start;
             }
 
-            public void setEnd(int end) {
+            public void setEnd(Object end) {
                 this.end = end;
             }
         }
-
 
     }
 }
