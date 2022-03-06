@@ -313,6 +313,49 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
         }
     }
 
+    public static class StartEndMethodAdapter extends MethodVisitor{
+        String className;
+        String name;
+        private boolean isFirst=true;
+
+        public StartEndMethodAdapter(MethodVisitor m, String n1, String n2) {
+            super(458752,m);
+            this.className=n1;
+            this.name=n2;
+        }
+
+        @Override
+        public void visitLineNumber(int line, Label start) {
+            if(isFirst){
+                this.visitMethodInsn(Opcodes.INVOKESTATIC,
+                        "externX/JacoconutX", "getInstance", "()L"
+                                + "externX/JacoconutX" + ";");
+                mv.visitLdcInsn(className+"#"+name);
+                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "externX/JacoconutX", "methodStart",
+                        "(Ljava/lang/String;)V");
+                isFirst=false;
+            }
+            super.visitLineNumber(line, start);
+        }
+
+        @Override
+        public void visitInsn(int opcode) {
+
+            if((opcode>= Opcodes.IRETURN && opcode<=Opcodes.RETURN)||opcode==Opcodes.ATHROW){
+                //return、throw指令
+                this.visitMethodInsn(Opcodes.INVOKESTATIC,
+                        "externX/JacoconutX", "getInstance", "()L"
+                                + "externX/JacoconutX" + ";");
+                mv.visitLdcInsn(className+"#"+name);
+                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "externX/JacoconutX", "methodEnd",
+                        "(Ljava/lang/String;)V");
+            }
+            super.visitInsn(opcode);
+        }
+    }
+
 
 
 

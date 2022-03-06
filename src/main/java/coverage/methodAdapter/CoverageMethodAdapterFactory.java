@@ -10,14 +10,16 @@ public class CoverageMethodAdapterFactory {
         if(scType==SCType.BASIC_BLOCK_RECORD){
             return new BasicBlockRecoderMethodAdapter(after,className,methodName);
         }else if(scType==SCType.BASIC_BLOCK_EXEC){
-            return new BasicBlockRecoderMethodAdapter.BasicBlockExecuterMethodAdapter(after,className,methodName);
+            return new BasicBlockRecoderMethodAdapter.BasicBlockExecuterMethodAdapter(new BasicBlockRecoderMethodAdapter.StartEndMethodAdapter(after,className,methodName),className,methodName);
         }else if(scType==SCType.STATEMENT_NAIVE){
             return new NaiveStatementCoverageMethodAdapter(after,className,methodName);
         }else if(scType==SCType.BRANCH){
             return new BranchCoverageMethodAdapter(after,className,methodName);
         }else if(scType==SCType.BASIC_BLOCK_CFG){
             return new PathCoverageMethodAdapter.CfgMethodAdapter(after,className,methodName);
-        }else{
+        }else if(scType==SCType.METHOD_STSRT_END){
+            return new BasicBlockRecoderMethodAdapter.StartEndMethodAdapter(after,className,methodName);
+        } else {
             return null;
         }
     }

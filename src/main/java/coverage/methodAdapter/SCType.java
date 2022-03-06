@@ -5,5 +5,6 @@ public enum SCType {
     BASIC_BLOCK_RECORD,
     BASIC_BLOCK_EXEC,
     BASIC_BLOCK_CFG,
-    BRANCH
+    BRANCH,
+    METHOD_STSRT_END
 }
