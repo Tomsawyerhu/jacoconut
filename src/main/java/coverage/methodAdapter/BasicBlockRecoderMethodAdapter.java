@@ -308,7 +308,7 @@ public class BasicBlockRecoderMethodAdapter extends MethodVisitor {
             mv.visitLdcInsn(callsite);
             mv.visitLdcInsn(lines);
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    "externX/JacoconutX", "executeLines",
+                    "externX/JacoconutX", "executeBasicBlock",
                     "(Ljava/lang/String;I)V");
         }
     }

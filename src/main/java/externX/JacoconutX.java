@@ -42,6 +42,22 @@ public class JacoconutX {
         }
     }
 
+    public void executeBasicBlock(String callsite,int line) throws IOException {
+        File file=new File(output);
+        boolean flag;
+        if(!file.exists()){
+            flag=file.createNewFile();
+        }else{
+            flag=file.isFile()&& file.canWrite();
+        }
+        if(flag){
+            FileWriter fw=new FileWriter(file,true);
+            fw.append(callsite).append("#").append(String.valueOf(line)).append("\n");
+            fw.flush();
+            fw.close();
+        }
+    }
+
     //goto switch
     public void executeBranch(String callsite,int branchId,int which) throws IOException {
         String token="BranchCoverageToken:"+callsite+"#"+branchId+"#"+which;
