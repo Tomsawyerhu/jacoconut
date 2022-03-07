@@ -1,7 +1,7 @@
 package algorithm;
 
 import com.github.javaparser.utils.Pair;
-import coverage.methodAdapter.PathCoverageMethodAdapter;
+import coverage.methodAdapter.CfgMethodAdapter;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.Graph;
@@ -15,17 +15,17 @@ import java.util.*;
 import static guru.nidi.graphviz.model.Factory.*;
 
 public class cfg {
-    public static void cfgDrawer(PathCoverageMethodAdapter.CfgMethodAdapter.ControlFlowGraph cfg,String output) throws IOException {
+    public static void cfgDrawer(CfgMethodAdapter.ControlFlowGraph cfg, String output) throws IOException {
         String title=String.format("Control FLow Graph For %s#%s",cfg.className,cfg.methodName);
         List<LinkSource> nodes=new ArrayList<>();
         String nodeFormat="start:%d\nsize:%d";
         for(int i=0;i<cfg.bbs.size();i+=1){
-            Node n=node(String.format(nodeFormat,cfg.bbs.get(i).startline,cfg.bbs.get(i).lines));
+            Node n=node(String.format(nodeFormat,cfg.bbs.get(i).startLabel,cfg.bbs.get(i).labelNum));
             boolean isEnd=true;
             for(int j=0;j<cfg.bbs.size();j+=1){
                 //忽略自环的情况
                 if(cfg.flows[i][j]>0&&i!=j){
-                    n=n.link(node(String.format(nodeFormat,cfg.bbs.get(j).startline,cfg.bbs.get(j).lines)));
+                    n=n.link(node(String.format(nodeFormat,cfg.bbs.get(j).startLabel,cfg.bbs.get(j).labelNum)));
                     if(isEnd){
                         isEnd= false;
                     }
@@ -49,8 +49,9 @@ public class cfg {
     }
 
     //todo how to handle loop?
-    public static int cfgPaths(PathCoverageMethodAdapter.CfgMethodAdapter.ControlFlowGraph cfg,CfgPathOptions options){
+    public static int cfgPaths(CfgMethodAdapter.ControlFlowGraph cfg, CfgPathOptions options){
         int[][] flows=cfg.flows;
+        if(flows.length==0){return 0;}
         List<Set<CfgPath>> IN_LIST=new ArrayList<>();
         List<Set<CfgPath>> OUT_LIST=new ArrayList<>();
 

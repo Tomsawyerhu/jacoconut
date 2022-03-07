@@ -42,22 +42,6 @@ public class JacoconutX {
         }
     }
 
-    public void executeBasicBlock(String callsite,int line) throws IOException {
-        File file=new File(output);
-        boolean flag;
-        if(!file.exists()){
-            flag=file.createNewFile();
-        }else{
-            flag=file.isFile()&& file.canWrite();
-        }
-        if(flag){
-            FileWriter fw=new FileWriter(file,true);
-            fw.append(callsite).append("#").append(String.valueOf(line)).append("\n");
-            fw.flush();
-            fw.close();
-        }
-    }
-
     public void methodStart(String method) throws IOException {
         File file=new File(output);
         boolean flag;
@@ -113,7 +97,6 @@ public class JacoconutX {
 
     //if else
     public void executeBranch(String callsite,int branchId,boolean which) throws IOException {
-
         File file=new File(output);
         boolean flag;
         if(!file.exists()){

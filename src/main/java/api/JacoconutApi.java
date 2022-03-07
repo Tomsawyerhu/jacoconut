@@ -1,7 +1,7 @@
 package api;
 
 import algorithm.cfg;
-import coverage.methodAdapter.PathCoverageMethodAdapter;
+import coverage.methodAdapter.CfgMethodAdapter;
 import externX.JacoconutX;
 import junit.TestDetector;
 import junit.TestDriver;
@@ -68,32 +68,23 @@ public class JacoconutApi {
     }
 
 
-    public static void pathCoverageProbe(String classFile){
+    public static void pathCoverageProbe(String classFile) throws IOException {
         FileInputStream inputStream= null;
         try {
             inputStream = new FileInputStream(classFile);
             ClassReader cr=new ClassReader(inputStream);
-            CoverageClassAdapter coverageClassAdapter=new CoverageClassAdapter(null,SCType.BASIC_BLOCK_RECORD);
+            CoverageClassAdapter coverageClassAdapter=new CoverageClassAdapter(null,SCType.CFG);
             cr.accept(coverageClassAdapter,ClassReader.SKIP_FRAMES);
             inputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        try {
-            inputStream = new FileInputStream(classFile);
-            ClassReader cr=new ClassReader(inputStream);
-            CoverageClassAdapter coverageClassAdapter=new CoverageClassAdapter(null,SCType.BASIC_BLOCK_CFG);
-            cr.accept(coverageClassAdapter,ClassReader.SKIP_FRAMES);
-            inputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+       branchCoverageProbe(classFile);
         try {
             inputStream = new FileInputStream(classFile);
             ClassReader cr=new ClassReader(inputStream);
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-            CoverageClassAdapter coverageClassAdapter=new CoverageClassAdapter(cw,SCType.BASIC_BLOCK_EXEC);
+            CoverageClassAdapter coverageClassAdapter=new CoverageClassAdapter(cw,SCType.METHOD_STSRT_END);
             cr.accept(coverageClassAdapter,ClassReader.SKIP_FRAMES);
             inputStream.close();
             byte[] data = cw.toByteArray();
@@ -114,11 +105,14 @@ public class JacoconutApi {
         cfg.CfgPathOptions options=new cfg.CfgPathOptions();
         options.limit_path_length=100;
         int i=1;
-        for(PathCoverageMethodAdapter.CfgMethodAdapter.ControlFlowGraph c: Storage.cfgs.get()){
+        for(CfgMethodAdapter.ControlFlowGraph c: Storage.cfgs.get()){
             try {
                 cfg.cfgDrawer(c,Paths.get(project,"pic"+i+".png").toAbsolutePath().toString());
+                logger.info(c.className+"#"+c.methodName+":"+i);
                 String key=c.className+"#"+c.methodName;
+                int paths=cfg.cfgPaths(c,options);
                 StorageHandler.setPath(key,cfg.cfgPaths(c,options));
+                logger.info(c.className+"#"+c.methodName+":"+paths);
             } catch (IOException e) {
                 e.printStackTrace();
             }

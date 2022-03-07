@@ -2,7 +2,7 @@ package storage;
 
 import com.github.javaparser.utils.Pair;
 import coverage.methodAdapter.BranchCoverageMethodAdapter;
-import coverage.methodAdapter.PathCoverageMethodAdapter;
+import coverage.methodAdapter.CfgMethodAdapter;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,7 +14,7 @@ public class Storage {
     public static AtomicReference<ConcurrentMap<String, List<Pair<Integer,Integer>>>> probes = new AtomicReference<>(
             new ConcurrentHashMap<>());
 
-    public static AtomicReference<Vector<PathCoverageMethodAdapter.CfgMethodAdapter.ControlFlowGraph>> cfgs=new AtomicReference<>(new Vector<>());
+    public static AtomicReference<Vector<CfgMethodAdapter.ControlFlowGraph>> cfgs=new AtomicReference<>(new Vector<>());
 
     public static AtomicReference<ConcurrentMap<String, List<BranchCoverageMethodAdapter.BranchStruct>>> branches=new AtomicReference<>(new ConcurrentHashMap<>());
 
