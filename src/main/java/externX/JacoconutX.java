@@ -9,7 +9,7 @@ import java.util.Set;
 public class JacoconutX {
 
     private static JacoconutX jacoconutX = null;
-    public static final String output="./probe_info.jcn";
+    public static final String output="probe_info.jcn";
     private static Set<String> tokens=new HashSet<>();
 
     private JacoconutX() {

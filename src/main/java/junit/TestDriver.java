@@ -5,6 +5,7 @@ import org.apache.maven.it.Verifier;
 
 import java.net.MalformedURLException;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class TestDriver {
     private Verifier v;
@@ -19,6 +20,15 @@ public class TestDriver {
         if(v.isAutoclean()) v.setAutoclean(false);
         try {
             v.executeGoals(Arrays.asList("surefire:test","-Dtest="+clazz+'#'+method));
+        } catch (VerificationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void runAllTests(){
+        if(v.isAutoclean()) v.setAutoclean(false);
+        try {
+            v.executeGoals(Collections.singletonList("surefire:test"));
         } catch (VerificationException e) {
             e.printStackTrace();
         }

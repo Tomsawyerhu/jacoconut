@@ -1,6 +1,8 @@
 package api;
 
 import algorithm.cfg;
+import analyze.StatementAnalyzer;
+import com.itextpdf.text.DocumentException;
 import coverage.methodAdapter.CfgMethodAdapter;
 import externX.JacoconutX;
 import junit.TestDetector;
@@ -14,8 +16,10 @@ import coverage.classAdapter.CoverageClassAdapter;
 import coverage.methodAdapter.SCType;
 import storage.Storage;
 import storage.StorageHandler;
+import visualize.Reporter;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -178,25 +182,36 @@ public class JacoconutApi {
             e.printStackTrace();
         }
 
-        try {
-            Map<String,List<String>> m=new TestDetector(p).detectAllJunitTests();
-            TestDriver t=new TestDriver(p);
+//        try {
+//            Map<String,List<String>> m=new TestDetector(p).detectAllJunitTests();
+//            int testMethodNum=m.values().stream().mapToInt(List::size).reduce(Integer::sum).getAsInt();
+//            TestDriver t=new TestDriver(p);
+//
+//            int i=1;
+//            for (String clazz:m.keySet()){
+//                for(String method:m.get(clazz)){
+//                    logger.info(String.format("start test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
+//                    t.run(clazz,method);
+//                    String path=JacoconutX.output;
+//                    FileWriter writer=new FileWriter(Paths.get(p,path).toFile(),true);
+//                    writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"line_coverage"));
+//                    writer.flush();
+//                    writer.close();
+//                    logger.info(String.format("finish test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
+//                    i+=1;
+//                }
+//            }
+//        } catch (IOException | VerificationException e) {
+//            e.printStackTrace();
+//        }
 
-            for (String clazz:m.keySet()){
-                for(String method:m.get(clazz)){
-                    logger.info(String.format("start test:%s#%s",clazz,method));
-                    t.run(clazz,method);
-                    String path=JacoconutX.output;
-                    FileWriter writer=new FileWriter(Paths.get(p,path).toFile(),true);
-                    writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"line_coverage"));
-                    writer.flush();
-                    writer.close();
-                    logger.info(String.format("finish test:%s#%s",clazz,method));
-                }
-            }
-        } catch (IOException | VerificationException e) {
+        try {
+            TestDriver t=new TestDriver(p);
+            t.runAllTests();
+        } catch (MalformedURLException e) {
             e.printStackTrace();
         }
+
     }
 
     public static void branchCoverage(String project) throws  VerificationException {
@@ -217,18 +232,21 @@ public class JacoconutApi {
 
         try {
             Map<String,List<String>> m=new TestDetector(p).detectAllJunitTests();
+            int testMethodNum=m.values().stream().mapToInt(List::size).reduce(Integer::sum).getAsInt();
             TestDriver t=new TestDriver(p);
 
+            int i=0;
             for (String clazz:m.keySet()){
                 for(String method:m.get(clazz)){
-                    logger.info(String.format("start test:%s#%s",clazz,method));
+                    logger.info(String.format("start test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
                     t.run(clazz,method);
                     String path=JacoconutX.output;
                     FileWriter writer=new FileWriter(Paths.get(p,path).toFile(),true);
                     writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"branch_coverage"));
                     writer.flush();
                     writer.close();
-                    logger.info(String.format("finish test:%s#%s",clazz,method));
+                    logger.info(String.format("finish test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
+                    i+=1;
                 }
             }
         } catch (IOException | VerificationException e) {
@@ -254,18 +272,21 @@ public class JacoconutApi {
 
         try {
             Map<String,List<String>> m=new TestDetector(p).detectAllJunitTests();
+            int testMethodNum=m.values().stream().mapToInt(List::size).reduce(Integer::sum).getAsInt();
             TestDriver t=new TestDriver(p);
 
+            int i=0;
             for (String clazz:m.keySet()){
                 for(String method:m.get(clazz)){
-                    logger.info(String.format("start test:%s#%s",clazz,method));
+                    logger.info(String.format("start test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
                     t.run(clazz,method);
                     String path=JacoconutX.output;
                     FileWriter writer=new FileWriter(Paths.get(p,path).toFile(),true);
                     writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"path_coverage"));
                     writer.flush();
                     writer.close();
-                    logger.info(String.format("finish test:%s#%s",clazz,method));
+                    logger.info(String.format("finish test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
+                    i+=1;
                 }
             }
         } catch (IOException | VerificationException e) {
@@ -277,8 +298,9 @@ public class JacoconutApi {
         String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-cli-cli-1.4";
         try {
             lineCoverage(p);
-            logger.info(Storage.lines.get().values().stream().reduce(Integer::sum).get());
-        } catch (VerificationException e) {
+            new StatementAnalyzer().analyze(new File(p+"\\"+JacoconutX.output));
+            Reporter.generateReport(p+"\\sample.pdf", Reporter.ReportType.STATEMENT_COVERAGE,new HashMap<>());
+        } catch (IOException | DocumentException | VerificationException e) {
             e.printStackTrace();
         }
     }

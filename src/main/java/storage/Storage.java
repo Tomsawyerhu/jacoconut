@@ -20,7 +20,7 @@ public class Storage {
 
     public static AtomicReference<ConcurrentMap<String,Integer>> paths=new AtomicReference<>(new ConcurrentHashMap<>());
 
-    public static AtomicReference<List<Pair<String,Integer>>> exec_lines=new AtomicReference<>(new ArrayList<>());
+    public static AtomicReference<ConcurrentMap<String,Integer>> exec_lines=new AtomicReference<>(new ConcurrentHashMap<>()); //key:method value: line executed for each method
 
 
 }
