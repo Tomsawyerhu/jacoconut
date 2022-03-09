@@ -20,6 +20,7 @@ public class Storage {
 
     public static AtomicReference<ConcurrentMap<String,Integer>> paths=new AtomicReference<>(new ConcurrentHashMap<>());
 
+    public static AtomicReference<List<Pair<String,Integer>>> exec_lines=new AtomicReference<>(new ArrayList<>());
 
 
 }

@@ -276,7 +276,8 @@ public class JacoconutApi {
     public static void main(String[] args) {
         String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-cli-cli-1.4";
         try {
-            pathCoverage(p);
+            lineCoverage(p);
+            logger.info(Storage.lines.get().values().stream().reduce(Integer::sum).get());
         } catch (VerificationException e) {
             e.printStackTrace();
         }
