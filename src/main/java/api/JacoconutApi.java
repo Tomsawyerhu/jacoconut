@@ -202,13 +202,17 @@ public class JacoconutApi {
                 }
             }
             //生成pdf报告
+            logger.info("ready to generate pdf report...");
             StatementAnalyzer analyzer=new StatementAnalyzer();
             analyzer.analyze(Paths.get(project,JacoconutX.output).toFile());
             Reporter.generateReport(project +"\\line_coverage_pdf", Reporter.ReportType.STATEMENT_COVERAGE,new HashMap<>());
+            logger.info("generate pdf report done!");
             //生成xml报告
+            logger.info("ready to generate xml report...");
             analyzer.reset();
             analyzer.analyze2(Paths.get(project,JacoconutX.output).toFile());
             XmlWriter.generateXml(project+"\\line_coverage_xml", XmlWriter.XmlType.STATEMENT_COVERAGE);
+            logger.info("generate xml report done!");
         } catch (IOException | VerificationException | DocumentException e) {
             e.printStackTrace();
         }

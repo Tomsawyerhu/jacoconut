@@ -11,7 +11,6 @@ import storage.Storage;
 import java.io.*;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public class XmlWriter {
     public enum XmlType {
