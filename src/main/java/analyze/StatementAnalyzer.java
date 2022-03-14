@@ -10,12 +10,21 @@ import java.util.concurrent.ConcurrentMap;
 
 public class StatementAnalyzer {
     private static final String SEPERATEER="#";
+    private static final String DEVIDER="-";
     private static final LineAnalyzer lineAnalyzer=new LineAnalyzer();
     private ConcurrentMap<String,Integer> lines=new ConcurrentHashMap<>();
     private Set<String> callsites=new HashSet<>();
     private static class LineAnalyzer{
+        private boolean skip=false;
         Pair<String,Integer> analyzeLine(String line){
             //lines
+            if(line.contains(DEVIDER)){
+                skip=!skip;
+                return null;
+            }
+            if(skip){
+                return null;
+            }
             int index=line.lastIndexOf(SEPERATEER);
             return new Pair<>(line.substring(0,index),Integer.parseInt(line.substring(index+1)));
         }
@@ -27,7 +36,7 @@ public class StatementAnalyzer {
         String line;
         while((line=bufferedReader.readLine())!=null){
             Pair<String,Integer> p=lineAnalyzer.analyzeLine(line);
-            if(!callsites.contains(p.a)){
+            if(p!=null&&!callsites.contains(p.a)){
                 String method=p.a.substring(0,p.a.lastIndexOf(SEPERATEER));
                 if(lines.containsKey(method)){
                     lines.put(method,lines.get(method)+p.b);

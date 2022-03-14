@@ -182,35 +182,35 @@ public class JacoconutApi {
             e.printStackTrace();
         }
 
-//        try {
-//            Map<String,List<String>> m=new TestDetector(p).detectAllJunitTests();
-//            int testMethodNum=m.values().stream().mapToInt(List::size).reduce(Integer::sum).getAsInt();
-//            TestDriver t=new TestDriver(p);
-//
-//            int i=1;
-//            for (String clazz:m.keySet()){
-//                for(String method:m.get(clazz)){
-//                    logger.info(String.format("start test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
-//                    t.run(clazz,method);
-//                    String path=JacoconutX.output;
-//                    FileWriter writer=new FileWriter(Paths.get(p,path).toFile(),true);
-//                    writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"line_coverage"));
-//                    writer.flush();
-//                    writer.close();
-//                    logger.info(String.format("finish test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
-//                    i+=1;
-//                }
-//            }
-//        } catch (IOException | VerificationException e) {
-//            e.printStackTrace();
-//        }
-
         try {
+            Map<String,List<String>> m=new TestDetector(p).detectAllJunitTests();
+            int testMethodNum=m.values().stream().mapToInt(List::size).reduce(Integer::sum).getAsInt();
             TestDriver t=new TestDriver(p);
-            t.runAllTests();
-        } catch (MalformedURLException e) {
+
+            int i=1;
+            for (String clazz:m.keySet()){
+                for(String method:m.get(clazz)){
+                    logger.info(String.format("start test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
+                    t.run(clazz,method);
+                    String path=JacoconutX.output;
+                    FileWriter writer=new FileWriter(Paths.get(p,path).toFile(),true);
+                    writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"line_coverage"));
+                    writer.flush();
+                    writer.close();
+                    logger.info(String.format("finish test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
+                    i+=1;
+                }
+            }
+        } catch (IOException | VerificationException e) {
             e.printStackTrace();
         }
+
+//        try {
+//            TestDriver t=new TestDriver(p);
+//            t.runAllTests();
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        }
 
     }
 

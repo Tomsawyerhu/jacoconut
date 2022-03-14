@@ -23,8 +23,8 @@ public class JacoconutX {
     }
 
     public void executeLines(String callsite,int line) throws IOException {
-        String token="StatementCoverageToken:"+callsite+"#"+line;
-        if(tokens.contains(token))return;
+//        String token="StatementCoverageToken:"+callsite+"#"+line;
+//        if(tokens.contains(token))return;
 
         File file=new File(output);
         boolean flag;
@@ -38,7 +38,7 @@ public class JacoconutX {
             fw.append(callsite).append("#").append(String.valueOf(line)).append("\n");
             fw.flush();
             fw.close();
-            tokens.add(token);
+//            tokens.add(token);
         }
     }
 
