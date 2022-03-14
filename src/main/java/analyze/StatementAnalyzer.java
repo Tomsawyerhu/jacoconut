@@ -65,6 +65,11 @@ public class StatementAnalyzer {
         }
     }
 
+    public void reset(){
+        this.lines.clear();
+        this.callsites.clear();
+    }
+
     //统计每个方法被调用的行数(覆盖率，e.g. 10/13)
     public void analyze(File file) throws IOException {
         final LineAnalyzer lineAnalyzer=new LineAnalyzer();
