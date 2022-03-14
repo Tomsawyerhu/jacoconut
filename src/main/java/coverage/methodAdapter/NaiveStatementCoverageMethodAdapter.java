@@ -5,7 +5,8 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import storage.Storage;
-import storage.StorageHandler;
+
+import java.util.HashSet;
 
 /**
  * 行覆盖
@@ -15,8 +16,6 @@ public class NaiveStatementCoverageMethodAdapter extends MethodVisitor {
     private static Logger logger = Logger.getLogger(NaiveStatementCoverageMethodAdapter.class);
     String className;
     String name;
-    int lines=0;
-
 
     protected NaiveStatementCoverageMethodAdapter(MethodVisitor m, String n1,String n2) {
         super(458752,m);
@@ -25,9 +24,15 @@ public class NaiveStatementCoverageMethodAdapter extends MethodVisitor {
     }
 
     @Override
+    public void visitCode() {
+        Storage.lines.get().putIfAbsent(className+"#"+name,new HashSet<>());
+        super.visitCode();
+    }
+
+    @Override
     public void visitLineNumber(int line, Label start) {
         super.visitLineNumber(line,start);
-        lines+=1;
+        Storage.lines.get().get(className+"#"+name).add(line);
         this.visitMethodInsn(Opcodes.INVOKESTATIC,
                 "externX/JacoconutX", "getInstance", "()L"
                         + "externX/JacoconutX" + ";");
@@ -37,11 +42,5 @@ public class NaiveStatementCoverageMethodAdapter extends MethodVisitor {
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                 "externX/JacoconutX", "executeLines",
                 "(Ljava/lang/String;I)V");
-    }
-
-    @Override
-    public void visitEnd() {
-        super.visitEnd();
-        StorageHandler.setLine(className+"#"+name,lines);
     }
 }

@@ -12,6 +12,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.ToIntFunction;
 
 public class Reporter {
     public enum ReportType{
@@ -24,8 +26,10 @@ public class Reporter {
             Font.BOLD);
 
     public static void generateReport(String path, ReportType type, Map<String,String> parameters) throws DocumentException, FileNotFoundException {
+        String p=path;
+        if(!path.endsWith(".pdf")) p+=".pdf";
         if(type==ReportType.STATEMENT_COVERAGE){
-            generateStatementCoverageReport(path,parameters);
+            generateStatementCoverageReport(p,parameters);
         }
     }
 
@@ -48,7 +52,7 @@ public class Reporter {
         addEmptyLine(preface, 1);
         document.add(preface);
 
-        int linesSum=Storage.lines.get().values().stream().reduce(Integer::sum).get();
+        int linesSum=Storage.lines.get().values().stream().mapToInt(Set::size).reduce(Integer::sum).getAsInt();
         int lineExec=Storage.exec_lines.get().values().stream().reduce(Integer::sum).get();
         Paragraph basicInfo = new Paragraph();
         addEmptyLine(basicInfo, 1);
@@ -76,8 +80,8 @@ public class Reporter {
 
         for(String p:Storage.exec_lines.get().keySet()){
             table.addCell(p);
-            table.addCell(String.format("%d/%d",Storage.exec_lines.get().get(p),Storage.lines.get().get(p)));
-            table.addCell(String.valueOf((double) 100*Storage.exec_lines.get().get(p)/(double)Storage.lines.get().get(p)));
+            table.addCell(String.format("%d/%d",Storage.exec_lines.get().get(p),Storage.lines.get().get(p).size()));
+            table.addCell(String.valueOf((double) 100*Storage.exec_lines.get().get(p)/(double)Storage.lines.get().get(p).size()));
         }
 
         Paragraph content = new Paragraph();

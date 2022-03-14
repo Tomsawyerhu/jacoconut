@@ -1,6 +1,7 @@
 package storage;
 
 import com.github.javaparser.utils.Pair;
+import com.kitfox.svg.A;
 import coverage.methodAdapter.BranchCoverageMethodAdapter;
 import coverage.methodAdapter.CfgMethodAdapter;
 
@@ -10,7 +11,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Storage {
-    public static AtomicReference<Map<String,Integer>> lines = new AtomicReference<>(new HashMap<>());
+    public static AtomicReference<Map<String,List<String>>> tests=new AtomicReference<>(new HashMap<>());
+    public static AtomicReference<Map<String,Set<Integer>>> lines = new AtomicReference<>(new ConcurrentHashMap<>());
     public static AtomicReference<ConcurrentMap<String, List<Pair<Integer,Integer>>>> probes = new AtomicReference<>(
             new ConcurrentHashMap<>());
 
@@ -20,7 +22,7 @@ public class Storage {
 
     public static AtomicReference<ConcurrentMap<String,Integer>> paths=new AtomicReference<>(new ConcurrentHashMap<>());
 
-    public static AtomicReference<ConcurrentMap<String,Integer>> exec_lines=new AtomicReference<>(new ConcurrentHashMap<>()); //key:method value: line executed for each method
+    public static AtomicReference<Map<String, Integer>> exec_lines= new AtomicReference<>(new HashMap<>()); //key: method value: line executed for each method
 
-
+    public static AtomicReference<Map<String,Map<Integer,Set<String>>>> exec_lines2=new AtomicReference<>(new HashMap<>()); //key: method value: map(key: line number value:set(test method))
 }

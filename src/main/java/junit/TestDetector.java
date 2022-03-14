@@ -2,6 +2,7 @@ package junit;
 
 import api.JacoconutApi;
 import org.apache.maven.it.VerificationException;
+import storage.Storage;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -72,6 +73,7 @@ public class TestDetector {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        Storage.tests.set(m);
         return m;
     }
 
