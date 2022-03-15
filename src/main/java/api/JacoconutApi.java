@@ -1,6 +1,7 @@
 package api;
 
 import algorithm.cfg;
+import analyze.BranchAnalyzer;
 import analyze.StatementAnalyzer;
 import com.itextpdf.text.DocumentException;
 import coverage.methodAdapter.CfgMethodAdapter;
@@ -187,9 +188,10 @@ public class JacoconutApi {
             int testMethodNum=m.values().stream().mapToInt(List::size).reduce(Integer::sum).getAsInt();
             TestDriver t=new TestDriver(project);
 
-            int i=1;
+            int i=0;
             for (String clazz:m.keySet()){
                 for(String method:m.get(clazz)){
+                    i+=1;
                     logger.info(String.format("start test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
                     t.run(clazz,method);
                     String path=JacoconutX.output;
@@ -197,8 +199,6 @@ public class JacoconutApi {
                     writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"line_coverage"));
                     writer.flush();
                     writer.close();
-                    logger.info(String.format("finish test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
-                    i+=1;
                 }
             }
             //生成pdf报告
@@ -250,6 +250,7 @@ public class JacoconutApi {
             int i=0;
             for (String clazz:m.keySet()){
                 for(String method:m.get(clazz)){
+                    i+=1;
                     logger.info(String.format("start test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
                     t.run(clazz,method);
                     String path=JacoconutX.output;
@@ -258,10 +259,24 @@ public class JacoconutApi {
                     writer.flush();
                     writer.close();
                     logger.info(String.format("finish test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
-                    i+=1;
                 }
             }
-        } catch (IOException | VerificationException e) {
+
+            //生成pdf报告
+            logger.info("ready to generate pdf report...");
+            BranchAnalyzer analyzer=new BranchAnalyzer();
+            analyzer.analyze(Paths.get(project,JacoconutX.output).toFile());
+            Reporter.generateReport(project +"\\branch_coverage_pdf", Reporter.ReportType.BRANCH_COVERAGE,new HashMap<>());
+            logger.info("generate pdf report done!");
+
+            //生成xml报告
+            logger.info("ready to generate xml report...");
+            analyzer.reset();
+            analyzer.analyze2(Paths.get(project,JacoconutX.output).toFile());
+            XmlWriter.generateXml(project+"\\branch_coverage_xml", XmlWriter.XmlType.BRANCH_COVERAGE);
+            logger.info("generate xml report done!");
+
+        } catch (IOException | VerificationException | DocumentException e) {
             e.printStackTrace();
         }
     }
@@ -290,6 +305,7 @@ public class JacoconutApi {
             int i=0;
             for (String clazz:m.keySet()){
                 for(String method:m.get(clazz)){
+                    i+=1;
                     logger.info(String.format("start test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
                     t.run(clazz,method);
                     String path=JacoconutX.output;
@@ -298,7 +314,6 @@ public class JacoconutApi {
                     writer.flush();
                     writer.close();
                     logger.info(String.format("finish test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
-                    i+=1;
                 }
             }
         } catch (IOException | VerificationException e) {
@@ -308,7 +323,7 @@ public class JacoconutApi {
 
     public static void main(String[] args) {
         String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-cli-cli-1.4";
-        lineCoverage(p);
+        branchCoverage(p);
     }
 
 }

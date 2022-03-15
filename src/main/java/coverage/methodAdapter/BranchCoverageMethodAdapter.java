@@ -7,7 +7,6 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import storage.StorageHandler;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 public class BranchCoverageMethodAdapter extends MethodVisitor {
@@ -18,7 +17,8 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
 
     private Map<Label,Pair<Integer,Integer>> switchLabels = new HashMap<>();
     private static int branchId=0;
-    public static List<BranchStruct> branchList=new ArrayList<>();
+    public List<BranchStruct> branchList=new ArrayList<>();
+    private Map<Label,Integer> labelLine=new HashMap<>();
 
     public BranchCoverageMethodAdapter(MethodVisitor mv,String n1,String n2) {
         super(458752,mv);
@@ -28,6 +28,7 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
 
     @Override
     public void visitLabel(Label label) {
+        this.labelLine.put(label,this.line);
         String callsite=className+"#"+methodName;
         super.visitLabel(label);
         if (switchLabels.containsKey(label)) {
@@ -55,14 +56,7 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
 
         //收集分支
         branchId+=1;
-        Field line= null;
-        try {
-            line = label.getClass().getDeclaredField("lineNumber");
-            line.setAccessible(true);
-            branchList.add(new BranchStruct(branchId,callsite,new int[]{this.line,line.getInt(label)}));
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        branchList.add(new BranchStruct(branchId,callsite,new int[]{this.line,-1},new Label[]{null,label},this.line,0));
 
 
         //修改字节码
@@ -97,19 +91,11 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
         int which=0;
         int[] wheres=new int[labels.length];
         for(Label label:labels){
-            try {
-                Field line = label.getClass().getDeclaredField("lineNumber");
-                line.setAccessible(true);
-                wheres[which]=line.getInt(label);
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
-
             this.switchLabels.put(label, new Pair<>(branchId, which));
             which+=1;
         }
         switchLabels.remove(dflt);
-        branchList.add(new BranchStruct(branchId,callsite,wheres));
+        branchList.add(new BranchStruct(branchId,callsite,wheres,labels,this.line,1));
 
         super.visitTableSwitchInsn(min, max, dflt, labels);
     }
@@ -121,19 +107,12 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
         int which=0;
         int[] wheres=new int[labels.length];
         for(Label label:labels){
-            try {
-                Field line = label.getClass().getDeclaredField("lineNumber");
-                line.setAccessible(true);
-                wheres[which]=line.getInt(label);
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
 
             this.switchLabels.put(label, new Pair<>(branchId, which));
             which+=1;
         }
         switchLabels.remove(dflt);
-        branchList.add(new BranchStruct(branchId,callsite,wheres));
+        branchList.add(new BranchStruct(branchId,callsite,wheres,labels,this.line,1));
         super.visitLookupSwitchInsn(dflt, keys, labels);
     }
 
@@ -157,6 +136,11 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
     @Override
     public void visitEnd() {
         super.visitEnd();
+        for(BranchStruct bs:this.branchList){
+            for(int i=0;i<bs.whereLabels.length;i+=1){
+                bs.wheres[i]=labelLine.getOrDefault(bs.whereLabels[i],bs.wheres[i]);
+            }
+        }
         StorageHandler.setBranch(className+"#"+methodName,branchList);
     }
 
@@ -167,11 +151,39 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
         String callsite;
         //mark lines where it jumps to
         int[] wheres;
+        //mark labels where it jumps to
+        Label[] whereLabels;
+        //start
+        int start;
+        //type(0 for if,1 for switch)
+        int type;
 
-        public BranchStruct(int branchId, String callsite, int[] wheres) {
+        public BranchStruct(int branchId, String callsite, int[] wheres,Label[] whereLabels,int start,int type) {
             this.branchId = branchId;
             this.callsite = callsite;
-            this.wheres = wheres;
+            this.wheres=wheres;
+            this.whereLabels=whereLabels;
+            this.start=start;
+            this.type=type;
+        }
+
+        public int[] wheres(){return wheres;}
+
+        public int id(){return branchId;}
+
+        public int start(){return start;}
+
+        public int size(){
+            return wheres.length;
+        }
+
+        public String type(){
+            if(type==0){return "IF";}
+            else if(type==1){
+                return "SWITCH";
+            }else{
+                return "UNKNOWN";
+            }
         }
     }
 
