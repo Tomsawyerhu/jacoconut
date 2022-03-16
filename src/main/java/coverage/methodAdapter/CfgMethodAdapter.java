@@ -2,6 +2,7 @@ package coverage.methodAdapter;
 
 import com.github.javaparser.utils.Pair;
 import org.apache.log4j.Logger;
+import org.junit.Test;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -164,7 +165,7 @@ public class CfgMethodAdapter extends MethodVisitor {
         }
 
         @Override
-        public void visitLineNumber(int line, Label start) {
+        public void visitLabel(Label label) {
             if(isFirst){
                 this.visitMethodInsn(Opcodes.INVOKESTATIC,
                         "externX/JacoconutX", "getInstance", "()L"
@@ -175,7 +176,7 @@ public class CfgMethodAdapter extends MethodVisitor {
                         "(Ljava/lang/String;)V");
                 isFirst=false;
             }
-            super.visitLineNumber(line, start);
+            super.visitLabel(label);
         }
 
         @Override

@@ -21,7 +21,8 @@ import java.util.function.ToIntFunction;
 public class Reporter {
     public enum ReportType{
         STATEMENT_COVERAGE,
-        BRANCH_COVERAGE
+        BRANCH_COVERAGE,
+        PATH_COVERAGE
     }
     private static final String titleKey="title";
     private static final Font bold = new Font(Font.FontFamily.TIMES_ROMAN, 18,
@@ -36,6 +37,8 @@ public class Reporter {
             generateStatementCoverageReport(p,parameters);
         }else if(type==ReportType.BRANCH_COVERAGE){
             generateBranchCoverageReport(p,parameters);
+        }else if(type==ReportType.PATH_COVERAGE){
+            generatePathCoverageReport(p,parameters);
         }
     }
 
@@ -153,6 +156,64 @@ public class Reporter {
                 table.addCell(String.format("%d/%d",Storage.exec_branches.get().getOrDefault(p,0),Storage.branches.get().get(p).stream().mapToInt(BranchCoverageMethodAdapter.BranchStruct::size).reduce(Integer::sum).getAsInt()));
                 table.addCell(String.valueOf((double) 100*Storage.exec_branches.get().getOrDefault(p,0)/(double)Storage.branches.get().get(p).stream().mapToInt(BranchCoverageMethodAdapter.BranchStruct::size).reduce(Integer::sum).getAsInt()));
             }
+        }
+
+        Paragraph content = new Paragraph();
+        content.add(table);
+        addEmptyLine(content,2);
+        document.add(content);
+        document.close();
+    }
+
+    private static void generatePathCoverageReport(String path, Map<String,String> parameters) throws FileNotFoundException, DocumentException {
+        Document document = new Document();
+        File f=new File(path);
+        if(f.exists())f.delete();
+        PdfWriter.getInstance(document, new FileOutputStream(path));
+        document.open();
+
+        //add title
+        if(!parameters.containsKey(titleKey)){
+            parameters.put(titleKey,"Path Coverage Report By Jacoconut");
+        }
+        Paragraph preface = new Paragraph();
+        addEmptyLine(preface, 1);
+        preface.add(new Paragraph(parameters.get(titleKey), bold));
+        addEmptyLine(preface, 1);
+        preface.add(new Paragraph(new Date().toString(),smallBold));
+        addEmptyLine(preface, 1);
+        document.add(preface);
+
+        int pathsSum=Storage.paths.get().values().stream().reduce(Integer::sum).get();
+        int pathExec=Storage.exec_paths.get().values().stream().reduce(Integer::sum).get();
+        Paragraph basicInfo = new Paragraph();
+        addEmptyLine(basicInfo, 1);
+        basicInfo.add(new Paragraph("Basic Coverage Info", bold));
+        addEmptyLine(basicInfo, 1);
+        basicInfo.add(new Paragraph(String.format("total_paths: %d\nexec_paths: %d\ncoverage_rate: %.3f%%\n",pathsSum,pathExec, (double) 100*pathExec / (double) pathsSum),smallBold));
+        addEmptyLine(basicInfo, 3);
+        document.add(basicInfo);
+
+        //add table
+        PdfPTable table = new PdfPTable(3);
+
+        PdfPCell b = new PdfPCell(new Phrase("method_name"));
+        b.setHorizontalAlignment(Element.ALIGN_CENTER);
+        table.addCell(b);
+
+        b = new PdfPCell(new Phrase("covered_branches/all_branches"));
+        b.setHorizontalAlignment(Element.ALIGN_CENTER);
+        table.addCell(b);
+
+        b = new PdfPCell(new Phrase("coverage_rate(%)"));
+        b.setHorizontalAlignment(Element.ALIGN_CENTER);
+        table.addCell(b);
+        table.setHeaderRows(1);
+
+        for(String p:Storage.paths.get().keySet()){
+            table.addCell(p);
+            table.addCell(String.format("%d/%d",Storage.exec_paths.get().getOrDefault(p,0),Storage.paths.get().get(p)));
+            table.addCell(String.valueOf((double) 100*Storage.exec_paths.get().getOrDefault(p,0)/(double)Storage.paths.get().get(p)));
         }
 
         Paragraph content = new Paragraph();

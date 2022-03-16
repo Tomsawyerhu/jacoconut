@@ -53,6 +53,20 @@ public class JacoconutApi {
         }
     }
 
+    public static void labelCoverageProbe(String classFile) throws IOException {
+        FileInputStream inputStream=new FileInputStream(classFile);
+        ClassReader cr=new ClassReader(inputStream);
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        CoverageClassAdapter labelCoverageClassAdapter=new CoverageClassAdapter(cw,SCType.PATH);
+        cr.accept(labelCoverageClassAdapter,ClassReader.SKIP_FRAMES);
+        inputStream.close();
+        byte[] data = cw.toByteArray();
+        FileOutputStream fos = new FileOutputStream(classFile);
+        fos.write(data);
+        fos.flush();
+        fos.close();
+    }
+
     public static void branchCoverageProbe(String classFile) throws IOException {
         FileInputStream inputStream=new FileInputStream(classFile);
         ClassReader cr=new ClassReader(inputStream);
@@ -85,7 +99,7 @@ public class JacoconutApi {
         } catch (IOException e) {
             e.printStackTrace();
         }
-       branchCoverageProbe(classFile);
+
         try {
             inputStream = new FileInputStream(classFile);
             ClassReader cr=new ClassReader(inputStream);
@@ -101,6 +115,8 @@ public class JacoconutApi {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        labelCoverageProbe(classFile);
     }
 
     public static void pathCoverageProbes(String project) throws IOException {
@@ -109,7 +125,7 @@ public class JacoconutApi {
         }
 
         cfg.CfgPathOptions options=new cfg.CfgPathOptions();
-        options.limit_path_length=100;
+        options.limit_loop_times=10;
         int i=1;
         for(CfgMethodAdapter.ControlFlowGraph c: Storage.cfgs.get()){
             try {
@@ -323,7 +339,7 @@ public class JacoconutApi {
 
     public static void main(String[] args) {
         String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-cli-cli-1.4";
-        branchCoverage(p);
+        pathCoverage(p);
     }
 
 }

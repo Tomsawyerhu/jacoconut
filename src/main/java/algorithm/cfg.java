@@ -178,6 +178,11 @@ public class cfg {
 
         }
 
+        @Override
+        public int hashCode() {
+            return 0;
+        }
+
         public int length(){
             return blockIds.size();
         }
