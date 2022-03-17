@@ -2,6 +2,7 @@ package api;
 
 import algorithm.cfg;
 import analyze.BranchAnalyzer;
+import analyze.PathAnalyzer;
 import analyze.StatementAnalyzer;
 import com.itextpdf.text.DocumentException;
 import coverage.methodAdapter.CfgMethodAdapter;
@@ -122,24 +123,6 @@ public class JacoconutApi {
     public static void pathCoverageProbes(String project) throws IOException {
         for(String classFile:findAllClassFiles(Paths.get(project,"target","classes"))){
             pathCoverageProbe(classFile);
-        }
-
-        cfg.CfgPathOptions options=new cfg.CfgPathOptions();
-        options.limit_loop_times=10;
-        int i=1;
-        for(CfgMethodAdapter.ControlFlowGraph c: Storage.cfgs.get()){
-            try {
-                cfg.cfgDrawer(c,Paths.get(project,"pic"+i+".png").toAbsolutePath().toString());
-                logger.info(c.className+"#"+c.methodName+":"+i);
-                String key=c.className+"#"+c.methodName;
-                int paths=cfg.cfgPaths(c,options);
-                StorageHandler.setPath(key,cfg.cfgPaths(c,options));
-                logger.info(c.className+"#"+c.methodName+":"+paths);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            i+=1;
         }
     }
 
@@ -297,7 +280,7 @@ public class JacoconutApi {
         }
     }
 
-    public static void pathCoverage(String project) {
+    public static void pathCoverage(String project) throws IOException, DocumentException {
 
         try {
             logger.info("ready to compile...");
@@ -335,11 +318,41 @@ public class JacoconutApi {
         } catch (IOException | VerificationException e) {
             e.printStackTrace();
         }
+
+        //计算路径数量&绘制cfg
+        cfg.CfgPathOptions options=new cfg.CfgPathOptions();
+        options.limit_loop_times=1;
+        int i=1;
+        for(CfgMethodAdapter.ControlFlowGraph c: Storage.cfgs.get()){
+            try {
+                cfg.cfgDrawer(c,Paths.get(project,"pic"+i+".png").toAbsolutePath().toString());
+                logger.info(c.className+"#"+c.methodName+":"+i);
+                String key=c.className+"#"+c.methodName;
+                int paths=cfg.cfgPaths(c,options);
+                StorageHandler.setPath(key,cfg.cfgPaths(c,options));
+                logger.info(c.className+"#"+c.methodName+":"+paths);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            i+=1;
+        }
+
+        //生成pdf报告
+        logger.info("ready to generate pdf report...");
+        PathAnalyzer analyzer=new PathAnalyzer();
+        analyzer.analyze(Paths.get(project,JacoconutX.output).toFile());
+        Reporter.generateReport(project +"\\path_coverage_pdf", Reporter.ReportType.PATH_COVERAGE,new HashMap<>());
+        logger.info("generate pdf report done!");
     }
 
     public static void main(String[] args) {
         String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-cli-cli-1.4";
-        pathCoverage(p);
+        try {
+            pathCoverage(p);
+        } catch (IOException | DocumentException e) {
+            e.printStackTrace();
+        }
     }
 
 }

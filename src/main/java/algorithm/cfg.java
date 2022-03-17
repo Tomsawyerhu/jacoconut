@@ -18,14 +18,14 @@ public class cfg {
     public static void cfgDrawer(CfgMethodAdapter.ControlFlowGraph cfg, String output) throws IOException {
         String title=String.format("Control FLow Graph For %s#%s",cfg.className,cfg.methodName);
         List<LinkSource> nodes=new ArrayList<>();
-        String nodeFormat="start:%d\nsize:%d";
+        String nodeFormat="id:%d\nsize:%d";
         for(int i=0;i<cfg.bbs.size();i+=1){
-            Node n=node(String.format(nodeFormat,cfg.bbs.get(i).startLabel,cfg.bbs.get(i).labelNum));
+            Node n=node(String.format(nodeFormat,cfg.bbs.get(i).blockId,cfg.bbs.get(i).labelNum));
             boolean isEnd=true;
             for(int j=0;j<cfg.bbs.size();j+=1){
                 //忽略自环的情况
                 if(cfg.flows[i][j]>0&&i!=j){
-                    n=n.link(node(String.format(nodeFormat,cfg.bbs.get(j).startLabel,cfg.bbs.get(j).labelNum)));
+                    n=n.link(node(String.format(nodeFormat,cfg.bbs.get(j).blockId,cfg.bbs.get(j).labelNum)));
                     if(isEnd){
                         isEnd= false;
                     }
@@ -44,7 +44,7 @@ public class cfg {
     }
 
     public static class CfgPathOptions{
-        public int limit_path_length=20;
+        public int limit_path_length=1000;
         public int limit_loop_times=10;
     }
 
@@ -81,8 +81,6 @@ public class cfg {
         }
         if(!headBlockIndexes.contains(0)){WORKSET.add(new Pair<>(CfgPath.rootPath(), 0));}
 
-        Map<Pair<Integer,Integer>,Integer> loopTimes=new HashMap<>();
-
         while(!WORKSET.isEmpty()){
             Pair<CfgPath,Integer> target=WORKSET.remove(0);
             //将工作集加入IN
@@ -96,14 +94,7 @@ public class cfg {
                     if(flows[target.b][i]>0&&target.b!=i){
                         if(target.b>i) {
                             //loop
-                            Pair<Integer, Integer> loopSite = new Pair<>(target.b, i);
-                            if (loopTimes.containsKey(loopSite)) {
-                                loopTimes.put(loopSite, loopTimes.get(loopSite) + 1);
-                            } else {
-                                loopTimes.put(loopSite, 1);
-                            }
-                            int loops=loopTimes.get(loopSite);
-                            if(loops<=options.limit_loop_times&&!IN_LIST.get(i).contains(newPath)){
+                            if(times(newPath.blockIds,cfg.bbs.get(i).blockId)<=options.limit_loop_times&&!IN_LIST.get(i).contains(newPath)){
                                 WORKSET.add(new Pair<>((CfgPath) newPath.clone(),i));
                             }
                         }else{
@@ -129,6 +120,16 @@ public class cfg {
             }
         }
         return paths;
+    }
+
+    private static int times(Collection<Integer> c,int element){
+        int times=0;
+        for (int current : c) {
+            if (element == current) {
+                times += 1;
+            }
+        }
+        return times;
     }
 
     private static class CfgPath{

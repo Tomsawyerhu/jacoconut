@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Predicate;
 
 public class PathAnalyzer {
     private static final String SEPARATOR ="#";
@@ -36,6 +37,17 @@ public class PathAnalyzer {
         public int hashCode() {
             return 0;
         }
+
+        public boolean isLoop(){
+            if(!this.value.toString().contains(PathSeparator)) {return false;}
+            List<String> s= Arrays.asList(this.value.toString().split(PathSeparator));
+            Set<String> ss=new HashSet<>(s);
+            for(String sss:ss){
+                if(s.stream().filter(s1 -> s1.equals(sss)).count()>=3){return true;};
+            }
+            return false;
+        }
+
     }
     private static class LineAnalyzer{
         private Stack<Path> paths=new Stack<>();
@@ -56,7 +68,11 @@ public class PathAnalyzer {
                 Path p=paths.pop();
                 String method=line.substring(0,line.lastIndexOf(SEPARATOR));
                 existPaths.putIfAbsent(method,new HashSet<>());
-                existPaths.get(method).add(p);
+                //如果是循环则不加入
+                if(!p.isLoop()){
+                    existPaths.get(method).add(p);
+                }
+
             }else{
                 paths.peek().append(line);
             }

@@ -211,9 +211,12 @@ public class Reporter {
         table.setHeaderRows(1);
 
         for(String p:Storage.paths.get().keySet()){
-            table.addCell(p);
-            table.addCell(String.format("%d/%d",Storage.exec_paths.get().getOrDefault(p,0),Storage.paths.get().get(p)));
-            table.addCell(String.valueOf((double) 100*Storage.exec_paths.get().getOrDefault(p,0)/(double)Storage.paths.get().get(p)));
+            if(Storage.paths.get().get(p)>0){
+                table.addCell(p);
+                table.addCell(String.format("%d/%d",Storage.exec_paths.get().getOrDefault(p,0),Storage.paths.get().get(p)));
+                table.addCell(String.valueOf((double) 100*Storage.exec_paths.get().getOrDefault(p,0)/(double)Storage.paths.get().get(p)));
+            }
+
         }
 
         Paragraph content = new Paragraph();
