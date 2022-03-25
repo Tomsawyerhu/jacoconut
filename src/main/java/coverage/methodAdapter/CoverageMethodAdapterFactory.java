@@ -13,8 +13,10 @@ public class CoverageMethodAdapterFactory {
             return new BranchCoverageMethodAdapter(after,className,methodName);
         }else if(scType==SCType.CFG){
             return new CfgMethodAdapter(after,className,methodName);
-        }else if(scType==SCType.METHOD_STSRT_END){
+        }else if(scType==SCType.METHOD_START_END){
             return new CfgMethodAdapter.StartEndMethodAdapter(after,className,methodName);
+        }else if(scType==SCType.TEST_END){
+            return new TestEndMethodAdapter(after,className,methodName);
         }else if(scType==SCType.PATH){
             return new PathCoverageMethodAdapter(after,className,methodName);
         } else {

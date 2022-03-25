@@ -119,4 +119,22 @@ public class JacoconutX {
             fw.close();
         }
     }
+
+
+    //test end
+    public void testEnd(String method) throws IOException {
+        File file=new File(output);
+        boolean flag;
+        if(!file.exists()){
+            flag=file.createNewFile();
+        }else{
+            flag=file.isFile()&& file.canWrite();
+        }
+        if(flag){
+            FileWriter fw=new FileWriter(file,true);
+            fw.append(String.format("--------------------\ntest_method:%s\n--------------------\n",method));
+            fw.flush();
+            fw.close();
+        }
+    }
 }

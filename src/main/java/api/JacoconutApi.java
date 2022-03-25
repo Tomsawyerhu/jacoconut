@@ -105,7 +105,7 @@ public class JacoconutApi {
             inputStream = new FileInputStream(classFile);
             ClassReader cr=new ClassReader(inputStream);
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-            CoverageClassAdapter coverageClassAdapter=new CoverageClassAdapter(cw,SCType.METHOD_STSRT_END);
+            CoverageClassAdapter coverageClassAdapter=new CoverageClassAdapter(cw,SCType.METHOD_START_END);
             cr.accept(coverageClassAdapter,ClassReader.SKIP_FRAMES);
             inputStream.close();
             byte[] data = cw.toByteArray();
@@ -123,6 +123,26 @@ public class JacoconutApi {
     public static void pathCoverageProbes(String project) throws IOException {
         for(String classFile:findAllClassFiles(Paths.get(project,"target","classes"))){
             pathCoverageProbe(classFile);
+        }
+    }
+
+    public static void testEndProbe(String classFile) throws IOException {
+        FileInputStream inputStream=new FileInputStream(classFile);
+        ClassReader cr=new ClassReader(inputStream);
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        CoverageClassAdapter testEndClassAdapter=new CoverageClassAdapter(cw,SCType.TEST_END);
+        cr.accept(testEndClassAdapter,ClassReader.SKIP_FRAMES);
+        inputStream.close();
+        byte[] data = cw.toByteArray();
+        FileOutputStream fos = new FileOutputStream(classFile);
+        fos.write(data);
+        fos.flush();
+        fos.close();
+    }
+
+    public static void testEndProbes(String project) throws IOException {
+        for(String classFile:Storage.tests.get().keySet()){
+            testEndProbe(project+"/target/test-classes/"+classFile.replace(".","/")+".class");
         }
     }
 
@@ -167,14 +187,22 @@ public class JacoconutApi {
         }
     }
 
+
+
     public static void lineCoverage(String project) {
         try {
             logger.info("ready to compile...");
             preparation1(project);
             logger.info("compile done!");
-            logger.info("modify bytecode...");
+            logger.info("find tests...");
+            new TestDetector(project).detectAllJunitTests();
+            logger.info("find tests done!");
+            logger.info("modify source bytecode...");
             lineCoverageProbes(project);
-            logger.info("modify bytecode done!");
+            logger.info("modify source bytecode done!");
+            logger.info("modify test bytecode...");
+            testEndProbes(project);
+            logger.info("modify test bytecode done!");
             logger.info("copy class file...");
             preparation2(project);
             logger.info("copy class file done!");
@@ -183,23 +211,10 @@ public class JacoconutApi {
         }
 
         try {
-            Map<String,List<String>> m=new TestDetector(project).detectAllJunitTests();
-            int testMethodNum=m.values().stream().mapToInt(List::size).reduce(Integer::sum).getAsInt();
             TestDriver t=new TestDriver(project);
 
-            int i=0;
-            for (String clazz:m.keySet()){
-                for(String method:m.get(clazz)){
-                    i+=1;
-                    logger.info(String.format("start test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
-                    t.run(clazz,method);
-                    String path=JacoconutX.output;
-                    FileWriter writer=new FileWriter(Paths.get(project,path).toFile(),true);
-                    writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"line_coverage"));
-                    writer.flush();
-                    writer.close();
-                }
-            }
+            t.runAllTests();
+
             //生成pdf报告
             logger.info("ready to generate pdf report...");
             StatementAnalyzer analyzer=new StatementAnalyzer();
@@ -217,12 +232,7 @@ public class JacoconutApi {
         }
 
 
-//        try {
-//            TestDriver t=new TestDriver(p);
-//            t.runAllTests();
-//        } catch (MalformedURLException e) {
-//            e.printStackTrace();
-//        }
+
 
     }
 
@@ -231,9 +241,15 @@ public class JacoconutApi {
             logger.info("ready to compile...");
             preparation1(project);
             logger.info("compile done!");
-            logger.info("modify bytecode...");
+            logger.info("find tests...");
+            new TestDetector(project).detectAllJunitTests();
+            logger.info("find tests done!");
+            logger.info("modify source bytecode...");
             branchCoverageProbes(project);
-            logger.info("modify bytecode done!");
+            logger.info("modify source bytecode done!");
+            logger.info("modify test bytecode...");
+            testEndProbes(project);
+            logger.info("modify test bytecode done!");
             logger.info("copy class file...");
             preparation2(project);
             logger.info("copy class file done!");
@@ -242,24 +258,8 @@ public class JacoconutApi {
         }
 
         try {
-            Map<String,List<String>> m=new TestDetector(project).detectAllJunitTests();
-            int testMethodNum=m.values().stream().mapToInt(List::size).reduce(Integer::sum).getAsInt();
             TestDriver t=new TestDriver(project);
-
-            int i=0;
-            for (String clazz:m.keySet()){
-                for(String method:m.get(clazz)){
-                    i+=1;
-                    logger.info(String.format("start test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
-                    t.run(clazz,method);
-                    String path=JacoconutX.output;
-                    FileWriter writer=new FileWriter(Paths.get(project,path).toFile(),true);
-                    writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"branch_coverage"));
-                    writer.flush();
-                    writer.close();
-                    logger.info(String.format("finish test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
-                }
-            }
+            t.runAllTests();
 
             //生成pdf报告
             logger.info("ready to generate pdf report...");
@@ -286,9 +286,15 @@ public class JacoconutApi {
             logger.info("ready to compile...");
             preparation1(project);
             logger.info("compile done!");
-            logger.info("modify bytecode...");
+            logger.info("find tests...");
+            new TestDetector(project).detectAllJunitTests();
+            logger.info("find tests done!");
+            logger.info("modify source bytecode...");
             pathCoverageProbes(project);
-            logger.info("modify bytecode done!");
+            logger.info("modify source bytecode done!");
+            logger.info("modify test bytecode...");
+            testEndProbes(project);
+            logger.info("modify test bytecode done!");
             logger.info("copy class file...");
             preparation2(project);
             logger.info("copy class file done!");
@@ -297,24 +303,8 @@ public class JacoconutApi {
         }
 
         try {
-            Map<String,List<String>> m=new TestDetector(project).detectAllJunitTests();
-            int testMethodNum=m.values().stream().mapToInt(List::size).reduce(Integer::sum).getAsInt();
             TestDriver t=new TestDriver(project);
-
-            int i=0;
-            for (String clazz:m.keySet()){
-                for(String method:m.get(clazz)){
-                    i+=1;
-                    logger.info(String.format("start test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
-                    t.run(clazz,method);
-                    String path=JacoconutX.output;
-                    FileWriter writer=new FileWriter(Paths.get(project,path).toFile(),true);
-                    writer.write(String.format("--------------------\ntest_method:%s#%s\ntest_type:%s\n--------------------\n",clazz,method,"path_coverage"));
-                    writer.flush();
-                    writer.close();
-                    logger.info(String.format("finish test:%s#%s(%d/%d)",clazz,method,i,testMethodNum));
-                }
-            }
+            t.runAllTests();
         } catch (IOException | VerificationException e) {
             e.printStackTrace();
         }
@@ -348,11 +338,7 @@ public class JacoconutApi {
 
     public static void main(String[] args) {
         String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-cli-cli-1.4";
-        try {
-            pathCoverage(p);
-        } catch (IOException | DocumentException e) {
-            e.printStackTrace();
-        }
+        lineCoverage(p);
     }
 
 }

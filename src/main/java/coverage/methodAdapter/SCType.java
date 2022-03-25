@@ -4,6 +4,7 @@ public enum SCType {
     STATEMENT_NAIVE,
     CFG,
     BRANCH,
-    METHOD_STSRT_END,
+    METHOD_START_END,
+    TEST_END,
     PATH
 }
