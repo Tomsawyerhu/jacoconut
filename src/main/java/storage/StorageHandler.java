@@ -1,12 +1,13 @@
 package storage;
 
-import coverage.methodAdapter.BranchCoverageMethodAdapter;
+
+import model.BranchStruct;
 
 import java.util.List;
 
 public class StorageHandler {
 
-    public static void setBranch(String method, List<BranchCoverageMethodAdapter.BranchStruct> branches){
+    public static void setBranch(String method, List<BranchStruct> branches){
         Storage.branches.get().put(method,branches);
     }
 

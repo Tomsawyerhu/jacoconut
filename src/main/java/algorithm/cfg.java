@@ -1,12 +1,12 @@
 package algorithm;
 
 import com.github.javaparser.utils.Pair;
-import coverage.methodAdapter.CfgMethodAdapter;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.Graph;
 import guru.nidi.graphviz.model.LinkSource;
 import guru.nidi.graphviz.model.Node;
+import model.ControlFlowGraph;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +15,7 @@ import java.util.*;
 import static guru.nidi.graphviz.model.Factory.*;
 
 public class cfg {
-    public static void cfgDrawer(CfgMethodAdapter.ControlFlowGraph cfg, String output) throws IOException {
+    public static void cfgDrawer(ControlFlowGraph cfg, String output) throws IOException {
         String title=String.format("Control FLow Graph For %s#%s",cfg.className,cfg.methodName);
         List<LinkSource> nodes=new ArrayList<>();
         String nodeFormat="id:%d\nsize:%d";
@@ -49,7 +49,7 @@ public class cfg {
     }
 
     //todo how to handle loop?
-    public static int cfgPaths(CfgMethodAdapter.ControlFlowGraph cfg, CfgPathOptions options){
+    public static int cfgPaths(ControlFlowGraph cfg, CfgPathOptions options){
         int[][] flows=cfg.flows;
         if(flows.length==0){return 0;}
         List<Set<CfgPath>> IN_LIST=new ArrayList<>();

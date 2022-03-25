@@ -1,6 +1,7 @@
 package coverage.methodAdapter;
 
 import com.github.javaparser.utils.Pair;
+import model.BranchStruct;
 import org.apache.log4j.Logger;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -144,47 +145,6 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
         StorageHandler.setBranch(className+"#"+methodName,branchList);
     }
 
-    public static class BranchStruct{
-        //unique for a branch
-        int branchId;
-        //class#method
-        String callsite;
-        //mark lines where it jumps to
-        int[] wheres;
-        //mark labels where it jumps to
-        Label[] whereLabels;
-        //start
-        int start;
-        //type(0 for if,1 for switch)
-        int type;
 
-        public BranchStruct(int branchId, String callsite, int[] wheres,Label[] whereLabels,int start,int type) {
-            this.branchId = branchId;
-            this.callsite = callsite;
-            this.wheres=wheres;
-            this.whereLabels=whereLabels;
-            this.start=start;
-            this.type=type;
-        }
-
-        public int[] wheres(){return wheres;}
-
-        public int id(){return branchId;}
-
-        public int start(){return start;}
-
-        public int size(){
-            return wheres.length;
-        }
-
-        public String type(){
-            if(type==0){return "IF";}
-            else if(type==1){
-                return "SWITCH";
-            }else{
-                return "UNKNOWN";
-            }
-        }
-    }
 
 }

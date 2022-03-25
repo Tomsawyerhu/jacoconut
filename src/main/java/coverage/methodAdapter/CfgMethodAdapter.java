@@ -1,8 +1,9 @@
 package coverage.methodAdapter;
 
 import com.github.javaparser.utils.Pair;
+import model.BasicBlock;
+import model.ControlFlowGraph;
 import org.apache.log4j.Logger;
-import org.junit.Test;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -48,25 +49,6 @@ public class CfgMethodAdapter extends MethodVisitor {
     List<Pair<Label,Label>> flows=new ArrayList<>();
     List<Boolean> flowCondition=new ArrayList<>();
 
-
-    public static class BasicBlock{
-        public int blockId;
-        public int startLabel;
-        public int labelNum;
-        private BasicBlock(){}
-    }
-
-    public static class ControlFlowGraph{
-        public String className;
-        public String methodName;
-
-        public ControlFlowGraph(String className, String methodName) {
-            this.className = className;
-            this.methodName = methodName;
-        }
-        public List<BasicBlock> bbs;
-        public int[][] flows;
-    }
 
     protected CfgMethodAdapter(MethodVisitor m, String n1, String n2) {
         super(458752,m);

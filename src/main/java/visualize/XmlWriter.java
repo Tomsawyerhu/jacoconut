@@ -2,6 +2,7 @@ package visualize;
 
 
 import coverage.methodAdapter.BranchCoverageMethodAdapter;
+import model.BranchStruct;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -136,8 +137,8 @@ public class XmlWriter {
 
         //branchList
         for(String method:Storage.branches.get().keySet()){
-            List<BranchCoverageMethodAdapter.BranchStruct> branches=Storage.branches.get().get(method);
-            branches.stream().sorted(Comparator.comparingInt(BranchCoverageMethodAdapter.BranchStruct::id)).forEach(bs -> {
+            List<BranchStruct> branches=Storage.branches.get().get(method);
+            branches.stream().sorted(Comparator.comparingInt(BranchStruct::id)).forEach(bs -> {
                 Element element12=element1.addElement(branchTag);
                 String[] ss=method.split(separator);
                 element12.addAttribute(branchIdAttr,String.valueOf(bs.id()));
