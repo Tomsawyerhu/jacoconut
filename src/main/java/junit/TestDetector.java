@@ -1,22 +1,21 @@
 package junit;
 
-import api.JacoconutApi;
 import org.apache.maven.it.VerificationException;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
 import storage.Storage;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
 public class TestDetector {
-    private TestDetector.ExtendedClassLoader sec;
     private String project;
 
     public TestDetector(String project) throws MalformedURLException, FileNotFoundException {
@@ -24,9 +23,6 @@ public class TestDetector {
             throw new FileNotFoundException(String.format("Directory %s not found", Paths.get(project ,"target","test-classes").toAbsolutePath()));
         }
         this.project=Paths.get(project).toAbsolutePath().toString();
-        sec=new TestDetector.ExtendedClassLoader(new URL[0], JacoconutApi.class.getClassLoader());
-        sec.addURL(Paths.get(project,"target","test-classes").toUri().toURL());
-        sec.addURL(Paths.get(project,"target","classes").toUri().toURL());
     }
 
     private TestDetector(){}
@@ -37,37 +33,16 @@ public class TestDetector {
         final String finalProject = project;
         try {
             Files
-                    .walk(Paths.get(project,"target","test-classes"))
+                    .walk(Paths.get(finalProject,"target","test-classes"))
                     .filter(path -> path.getFileName().toString().endsWith(".class"))
                     .forEach(path -> {
-                        String className=Paths.get(finalProject,"target","test-classes").relativize(path).toString().replace(".class","").replace("/",".").replace("\\",".");
-                        Class<?> testClazz= null;
                         try {
-                            testClazz = sec.loadClass(className);
-                        } catch (ClassNotFoundException e) {
+                            FileInputStream stream=new FileInputStream(path.toAbsolutePath().toString());
+                            ClassReader reader=new ClassReader(stream);
+                            reader.accept(new TestDetectClassAdapter(null), org.objectweb.asm.ClassReader.SKIP_FRAMES);
+                            stream.close();
+                        } catch (IOException e) {
                             e.printStackTrace();
-                        }
-
-                        if (testClazz != null) {
-                            for(Method method:testClazz.getMethods()){
-                                // @org.junit.Test
-                                // Public void test()
-                                if( Modifier.isPublic(method.getModifiers())
-                                        && method.getReturnType().equals(Void.TYPE)
-                                        && method.getParameterTypes().length==0
-                                        && (method.getName().startsWith("test")||
-                                        Arrays
-                                                .stream(method.getAnnotations())
-                                                .anyMatch(
-                                                        annotation -> annotation.annotationType().getName().equals("org.junit.Test")
-                                                ))
-                                ){
-                                    if(!m.containsKey(className)){
-                                        m.put(className,new ArrayList<>());
-                                    }
-                                    m.get(className).add(method.getName());
-                                }
-                            }
                         }
                     });
         } catch (IOException e) {
@@ -77,13 +52,50 @@ public class TestDetector {
         return m;
     }
 
-    public static class ExtendedClassLoader extends URLClassLoader {
-        public ExtendedClassLoader(URL[] urls, ClassLoader parent) {
-            super(urls, parent);
+
+    private static class TestDetectClassAdapter extends ClassVisitor {
+        String className;
+
+        public TestDetectClassAdapter(ClassVisitor cv) {
+            super(458752,cv);
         }
 
-        public void addURL(URL url) {
-            super.addURL(url);
+        @Override
+        public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+            this.className=name;
+            super.visit(version, access, name, signature, superName, interfaces);
+        }
+
+        @Override
+        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+            if(desc.equals("()V")&&access==1){
+                if(name.startsWith("test")){
+                    Storage.tests.get().putIfAbsent(className.replace("/","."),new ArrayList<>());
+                    Storage.tests.get().get(className.replace("/",".")).add(name);
+                }else{
+                    return new TestDetectMethodAdapter(className,name);
+                }
+            }
+            return super.visitMethod(access,name,desc,signature,exceptions);
+        }
+    }
+
+    private static class TestDetectMethodAdapter extends MethodVisitor{
+        String n1;
+        String n2;
+        public TestDetectMethodAdapter(String className,String methodName) {
+            super(458752);
+            n1=className;
+            n2=methodName;
+        }
+
+        @Override
+        public AnnotationVisitor visitAnnotation(String s, boolean b) {
+            if(s.equals("Lorg/junit/Test;")){
+                Storage.tests.get().putIfAbsent(n1.replace("/","."),new ArrayList<>());
+                Storage.tests.get().get(n1.replace("/",".")).add(n2);
+            }
+            return super.visitAnnotation(s, b);
         }
     }
 
