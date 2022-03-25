@@ -28,7 +28,7 @@ public class Storage {
 
     public static AtomicReference<Map<String,Integer>> exec_branches=new AtomicReference<>(new HashMap<>()); //key: method value: branch executed for each method
 
-    public static AtomicReference<Map<Integer,Map<Integer,Set<String>>>> exec_branches2=new AtomicReference<>(new HashMap<>()); //key: branchId value: map(key: which value:set(test method))
+    public static AtomicReference<Map<Integer,Set<String>>> exec_branches2=new AtomicReference<>(new HashMap<>()); //key: branchId value:set(test method)
 
     public static AtomicReference<Map<String,Integer>> exec_paths=new AtomicReference<>(new HashMap<>());
 }

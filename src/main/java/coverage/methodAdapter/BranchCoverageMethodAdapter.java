@@ -1,6 +1,5 @@
 package coverage.methodAdapter;
 
-import com.github.javaparser.utils.Pair;
 import org.apache.log4j.Logger;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -15,10 +14,9 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
     private final String methodName;
     private int line=-1;
 
-    private Map<Label,Pair<Integer,Integer>> switchLabels = new HashMap<>();
+    private Map<Label,Integer> switchLabels = new HashMap<>();
     private static int branchId=0;
     public List<BranchStruct> branchList=new ArrayList<>();
-    private Map<Label,Integer> labelLine=new HashMap<>();
 
     public BranchCoverageMethodAdapter(MethodVisitor mv,String n1,String n2) {
         super(458752,mv);
@@ -28,20 +26,20 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
 
     @Override
     public void visitLabel(Label label) {
-        this.labelLine.put(label,this.line);
         String callsite=className+"#"+methodName;
-        super.visitLabel(label);
+
         if (switchLabels.containsKey(label)) {
+            this.branchList.add(new BranchStruct(switchLabels.get(label),callsite,this.line,2));
             this.visitMethodInsn(Opcodes.INVOKESTATIC,
                     "externX/JacoconutX", "getInstance", "()L"
                             + "externX/JacoconutX" + ";");
             mv.visitLdcInsn(callsite);
-            mv.visitLdcInsn(switchLabels.get(label).a);
-            mv.visitLdcInsn(switchLabels.get(label).b);
+            mv.visitLdcInsn(switchLabels.get(label));
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                     "externX/JacoconutX", "executeBranch",
-                    "(Ljava/lang/String;II)V");
+                    "(Ljava/lang/String;I)V");
         }
+        super.visitLabel(label);
     }
 
     @Override
@@ -54,17 +52,20 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
             return;
         }
 
-        //收集分支
-        branchId+=1;
-        branchList.add(new BranchStruct(branchId,callsite,new int[]{this.line,-1},new Label[]{null,label},this.line,0));
-
+        //true分支
+        int trueId=branchId;
+        branchList.add(new BranchStruct(trueId,callsite,this.line,0));
+        //false分支
+        int falseId=++branchId;
+        branchList.add(new BranchStruct(falseId,callsite,this.line,1));
+        branchId++;
 
         //修改字节码
         this.visitMethodInsn(Opcodes.INVOKESTATIC,
                 "externX/JacoconutX", "getInstance", "()L"
                         + "externX/JacoconutX" + ";");
         mv.visitLdcInsn(callsite);
-        mv.visitLdcInsn(branchId);
+        mv.visitLdcInsn(falseId);
         mv.visitLdcInsn(false);
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                 "externX/JacoconutX", "executeBranch",
@@ -76,7 +77,7 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
                 "externX/JacoconutX", "getInstance", "()L"
                         + "externX/JacoconutX" + ";");
         mv.visitLdcInsn(callsite);
-        mv.visitLdcInsn(branchId);
+        mv.visitLdcInsn(trueId);
         mv.visitLdcInsn(true);
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                 "externX/JacoconutX", "executeBranch",
@@ -86,33 +87,19 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
 
     @Override
     public void visitTableSwitchInsn(int min, int max, Label dflt, Label... labels) {
-        String callsite=this.className+"#"+this.methodName;
-        branchId+=1;
-        int which=0;
-        int[] wheres=new int[labels.length];
         for(Label label:labels){
-            this.switchLabels.put(label, new Pair<>(branchId, which));
-            which+=1;
+            this.switchLabels.put(label, branchId++);
         }
         switchLabels.remove(dflt);
-        branchList.add(new BranchStruct(branchId,callsite,wheres,labels,this.line,1));
-
         super.visitTableSwitchInsn(min, max, dflt, labels);
     }
 
     @Override
     public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
-        String callsite=this.className+"#"+this.methodName;
-        branchId+=1;
-        int which=0;
-        int[] wheres=new int[labels.length];
         for(Label label:labels){
-
-            this.switchLabels.put(label, new Pair<>(branchId, which));
-            which+=1;
+            this.switchLabels.put(label, branchId++);
         }
         switchLabels.remove(dflt);
-        branchList.add(new BranchStruct(branchId,callsite,wheres,labels,this.line,1));
         super.visitLookupSwitchInsn(dflt, keys, labels);
     }
 
@@ -136,11 +123,6 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
     @Override
     public void visitEnd() {
         super.visitEnd();
-        for(BranchStruct bs:this.branchList){
-            for(int i=0;i<bs.whereLabels.length;i+=1){
-                bs.wheres[i]=labelLine.getOrDefault(bs.whereLabels[i],bs.wheres[i]);
-            }
-        }
         StorageHandler.setBranch(className+"#"+methodName,branchList);
     }
 
@@ -150,36 +132,26 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
         //class#method
         String callsite;
         //mark lines where it jumps to
-        int[] wheres;
-        //mark labels where it jumps to
-        Label[] whereLabels;
-        //start
-        int start;
-        //type(0 for if,1 for switch)
+        int lineNum;
+        //type(0 for if true,1 for if false,2 for switch)
         int type;
 
-        public BranchStruct(int branchId, String callsite, int[] wheres,Label[] whereLabels,int start,int type) {
+        public BranchStruct(int branchId, String callsite, int lineNum, int type) {
             this.branchId = branchId;
             this.callsite = callsite;
-            this.wheres=wheres;
-            this.whereLabels=whereLabels;
-            this.start=start;
-            this.type=type;
+            this.lineNum = lineNum;
+            this.type = type;
         }
-
-        public int[] wheres(){return wheres;}
 
         public int id(){return branchId;}
 
-        public int start(){return start;}
-
-        public int size(){
-            return wheres.length;
-        }
+        public int lineNum(){return lineNum;}
 
         public String type(){
-            if(type==0){return "IF";}
+            if(type==0){return "IF TRUE";}
             else if(type==1){
+                return "IF FALSE";
+            }else if(type==2){
                 return "SWITCH";
             }else{
                 return "UNKNOWN";

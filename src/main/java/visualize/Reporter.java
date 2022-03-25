@@ -121,10 +121,7 @@ public class Reporter {
         addEmptyLine(preface, 1);
         document.add(preface);
 
-        int branchesSum=Storage.branches.get().values().stream().mapToInt(value -> {
-            if(value.size()==0){return 0;}
-            return value.stream().mapToInt(BranchCoverageMethodAdapter.BranchStruct::size).reduce(Integer::sum).getAsInt();
-        }).reduce(Integer::sum).getAsInt();
+        int branchesSum=Storage.branches.get().values().stream().mapToInt(List::size).sum();
         int branchExec=Storage.exec_branches.get().values().stream().reduce(Integer::sum).get();
         Paragraph basicInfo = new Paragraph();
         addEmptyLine(basicInfo, 1);
@@ -153,8 +150,8 @@ public class Reporter {
         for(String p:Storage.branches.get().keySet()){
             if(Storage.branches.get().get(p).size()>0){
                 table.addCell(p);
-                table.addCell(String.format("%d/%d",Storage.exec_branches.get().getOrDefault(p,0),Storage.branches.get().get(p).stream().mapToInt(BranchCoverageMethodAdapter.BranchStruct::size).reduce(Integer::sum).getAsInt()));
-                table.addCell(String.valueOf((double) 100*Storage.exec_branches.get().getOrDefault(p,0)/(double)Storage.branches.get().get(p).stream().mapToInt(BranchCoverageMethodAdapter.BranchStruct::size).reduce(Integer::sum).getAsInt()));
+                table.addCell(String.format("%d/%d",Storage.exec_branches.get().getOrDefault(p,0),Storage.branches.get().get(p).size()));
+                table.addCell(String.valueOf((double) 100*Storage.exec_branches.get().getOrDefault(p,0)/(double)Storage.branches.get().get(p).size()));
             }
         }
 

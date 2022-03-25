@@ -71,7 +71,7 @@ public class JacoconutX {
     }
 
     //goto switch
-    public void executeBranch(String callsite,int branchId,int which) throws IOException {
+    public void executeBranch(String callsite,int branchId) throws IOException {
         File file=new File(output);
         boolean flag;
         if(!file.exists()){
@@ -81,7 +81,7 @@ public class JacoconutX {
         }
         if(flag){
             FileWriter fw=new FileWriter(file,true);
-            fw.append(callsite).append("#").append(String.valueOf(branchId)).append("#").append(String.valueOf(which)).append("\n");
+            fw.append(callsite).append("#").append(String.valueOf(branchId)).append("\n");
             fw.flush();
             fw.close();
         }
@@ -104,7 +104,7 @@ public class JacoconutX {
     }
 
     //if else
-    public void executeBranch(String callsite,int branchId,boolean which) throws IOException {
+    public void executeBranch(String callsite,int branchId,boolean isTrue) throws IOException {
         File file=new File(output);
         boolean flag;
         if(!file.exists()){
@@ -114,7 +114,7 @@ public class JacoconutX {
         }
         if(flag){
             FileWriter fw=new FileWriter(file,true);
-            fw.append(callsite).append("#").append(String.valueOf(branchId)).append("#").append(which?"true":"false").append("\n");
+            fw.append(callsite).append("#").append(String.valueOf(branchId)).append("#").append(isTrue?"true":"false").append("\n");
             fw.flush();
             fw.close();
         }

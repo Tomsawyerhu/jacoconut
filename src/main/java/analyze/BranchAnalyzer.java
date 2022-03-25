@@ -12,7 +12,7 @@ import java.util.Set;
 public class BranchAnalyzer {
     private static final String SEPERATEER="#";
     private static final String DEVIDER="-";
-    private Set<String> callsites=new HashSet<>();
+    private Set<Integer> branchIds=new HashSet<>();
     private Map<String,Integer> branches=new HashMap<>();
 
     private static class LineAnalyzer{
@@ -26,34 +26,35 @@ public class BranchAnalyzer {
                 //测试用例最后执行的branch是if的false分支
                 if(skip&&lastIfFalse){
                     lastIfFalse=false;
-                    return new Pair<>(lastIfFalseCallsite,1);
+                    int index=lastIfFalseCallsite.lastIndexOf(SEPERATEER);
+                    return new Pair<>(lastIfFalseCallsite.substring(0,index),Integer.parseInt(lastIfFalseCallsite.substring(index+1)));
                 }
                 return null;
             }
             if(skip){
                 return null;
             }
-            int index=line.lastIndexOf(SEPERATEER);
-            String sub=line.substring(0,index);
-            String which=line.substring(index+1);
+            String[] ss =line.split(SEPERATEER); // class#methodName#methodDesc#branchId Or class#methodName#methodDesc#branchId#trueOrFalse
+            int size=ss.length;
 
             //true分支
-            if(which.equals("true")){
+            if(ss[size-1].equals("true")){
                 lastIfFalse=false;
-                return new Pair<>(sub,0);
-            }else if(which.equals("false")){
+                return new Pair<>(ss[0]+"#"+ss[1]+"#"+ss[2],Integer.parseInt(ss[3]));
+            }else if(ss[size-1].equals("false")){
                 boolean tmpFalse=lastIfFalse;
                 String tmpFalseCallsite=lastIfFalseCallsite;
                 lastIfFalse=true;
-                lastIfFalseCallsite=sub;
+                lastIfFalseCallsite=ss[0]+"#"+ss[1]+"#"+ss[2]+"#"+ss[3];
                 //上一个是false分支
                 if(tmpFalse){
-                    return new Pair<>(tmpFalseCallsite,1);
+                    int index=tmpFalseCallsite.lastIndexOf(SEPERATEER);
+                    return new Pair<>(tmpFalseCallsite.substring(0,index),Integer.parseInt(tmpFalseCallsite.substring(index+1)));
                 }
                 return null;
             }else{
                 //switch
-                return new Pair<>(sub,Integer.parseInt(which));
+                return new Pair<>(ss[0]+"#"+ss[1]+"#"+ss[2],Integer.parseInt(ss[3]));
             }
         }
     }
@@ -61,18 +62,15 @@ public class BranchAnalyzer {
     private static class LineAnalyzer2{
         private boolean skip=false;
         private LineAnalyzer analyzer=new LineAnalyzer();
-        private Map<Integer,Map<Integer,Set<String>>> results=new HashMap<>();
-        private Map<Integer,Set<Integer>> result=new HashMap<>();
+        private Map<Integer,Set<String>> results=new HashMap<>();
+        private Set<Integer> result=new HashSet<>();
 
         public boolean analyzeLine(String line){
             //先委托给LineAnalyzer进行分析
             Pair<String,Integer> p=analyzer.analyzeLine(line);
             if(p!=null){
-                int index=p.a.lastIndexOf(SEPERATEER);
-                int branchId=Integer.parseInt(p.a.substring(index+1));
-                int which=p.b;
-                result.putIfAbsent(branchId,new HashSet<>());
-                result.get(branchId).add(which);
+                int branchId=p.b;
+                result.add(branchId);
             }
 
             if(line.contains(DEVIDER)){
@@ -84,12 +82,9 @@ public class BranchAnalyzer {
                 String prefix="test_method:";
                 if(line.startsWith(prefix)){
                     String testMethod=line.trim().substring(prefix.length());
-                    for(int branchId:result.keySet()){
-                        results.putIfAbsent(branchId,new HashMap<>());
-                        for(int which:result.get(branchId)){
-                            results.get(branchId).putIfAbsent(which,new HashSet<>());
-                            results.get(branchId).get(which).add(testMethod);
-                        }
+                    for(int branchId:result){
+                        results.putIfAbsent(branchId,new HashSet<>());
+                        results.get(branchId).add(testMethod);
                     }
                     result.clear();
                 }
@@ -100,7 +95,7 @@ public class BranchAnalyzer {
 
     public void reset(){
         this.branches.clear();
-        this.callsites.clear();
+        this.branchIds.clear();
     }
 
     //统计每个方法被调用的分支个数(覆盖率 e.g. 1/2)
@@ -111,12 +106,10 @@ public class BranchAnalyzer {
         while((line=bufferedReader.readLine())!=null){
             Pair<String,Integer> p=lineAnalyzer.analyzeLine(line);
             if(p!=null){
-                String method=p.a.substring(0,p.a.lastIndexOf(SEPERATEER));
-                int branchId=Integer.parseInt(p.a.substring(p.a.lastIndexOf(SEPERATEER)+1));
-                int which=p.b;
-                String callsite=method+SEPERATEER+branchId+SEPERATEER+which;
-                if(!callsites.contains(callsite)){
-                    callsites.add(callsite);
+                String method=p.a;
+                int branchId=p.b;
+                if(!branchIds.contains(branchId)){
+                    branchIds.add(branchId);
                     branches.putIfAbsent(method,0);
                     branches.put(method,branches.get(method)+1);
                 }

@@ -230,10 +230,6 @@ public class JacoconutApi {
         } catch (IOException | VerificationException | DocumentException e) {
             e.printStackTrace();
         }
-
-
-
-
     }
 
     public static void branchCoverage(String project){
@@ -338,7 +334,7 @@ public class JacoconutApi {
 
     public static void main(String[] args) {
         String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-cli-cli-1.4";
-        lineCoverage(p);
+        branchCoverage(p);
     }
 
 }
