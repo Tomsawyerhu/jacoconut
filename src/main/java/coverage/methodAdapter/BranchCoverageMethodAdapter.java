@@ -33,11 +33,10 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
             this.visitMethodInsn(Opcodes.INVOKESTATIC,
                     "externX/JacoconutX", "getInstance", "()L"
                             + "externX/JacoconutX" + ";");
-            mv.visitLdcInsn(callsite);
             mv.visitLdcInsn(switchLabels.get(label));
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                     "externX/JacoconutX", "executeBranch",
-                    "(Ljava/lang/String;I)V");
+                    "(I)V");
         }
         super.visitLabel(label);
     }
@@ -64,24 +63,22 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
         this.visitMethodInsn(Opcodes.INVOKESTATIC,
                 "externX/JacoconutX", "getInstance", "()L"
                         + "externX/JacoconutX" + ";");
-        mv.visitLdcInsn(callsite);
         mv.visitLdcInsn(falseId);
         mv.visitLdcInsn(false);
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                 "externX/JacoconutX", "executeBranch",
-                "(Ljava/lang/String;IZ)V");
+                "(IZ)V");
 
         mv.visitJumpInsn(opcode, label);
 
         this.visitMethodInsn(Opcodes.INVOKESTATIC,
                 "externX/JacoconutX", "getInstance", "()L"
                         + "externX/JacoconutX" + ";");
-        mv.visitLdcInsn(callsite);
         mv.visitLdcInsn(trueId);
         mv.visitLdcInsn(true);
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                 "externX/JacoconutX", "executeBranch",
-                "(Ljava/lang/String;IZ)V");
+                "(IZ)V");
     }
 
 
@@ -107,11 +104,6 @@ public class BranchCoverageMethodAdapter extends MethodVisitor {
     public void visitLineNumber(int line, Label start) {
         this.line=line;
         super.visitLineNumber(line, start);
-    }
-
-    @Override
-    public void visitMaxs(int maxStack, int maxLocals) {
-        super.visitMaxs(maxStack+4, maxLocals);
     }
 
     @Override

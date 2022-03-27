@@ -12,7 +12,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Storage {
     public static AtomicReference<Map<String,List<String>>> tests=new AtomicReference<>(new HashMap<>());
+
     public static AtomicReference<Map<String,Set<Integer>>> lines = new AtomicReference<>(new ConcurrentHashMap<>());
+
     public static AtomicReference<ConcurrentMap<String, List<Pair<Integer,Integer>>>> probes = new AtomicReference<>(
             new ConcurrentHashMap<>());
 
@@ -31,4 +33,10 @@ public class Storage {
     public static AtomicReference<Map<Integer,Set<String>>> exec_branches2=new AtomicReference<>(new HashMap<>()); //key: branchId value:set(test method)
 
     public static AtomicReference<Map<String,Integer>> exec_paths=new AtomicReference<>(new HashMap<>());
+
+    public static AtomicReference<Map<String,Set<String>>> methods=new AtomicReference<>(new HashMap<>());
+
+    public static AtomicReference<Map<String,Integer>> exec_methods=new AtomicReference<>(new HashMap<>()); //key: class value: method executed for each class
+
+    public static AtomicReference<Map<String,Set<String>>> exec_methods2=new AtomicReference<>(new HashMap<>()); //key: method value: set(test method)
 }

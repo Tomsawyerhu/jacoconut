@@ -1,61 +1,30 @@
 package analyze;
 
 import com.github.javaparser.utils.Pair;
+import coverage.methodAdapter.BranchCoverageMethodAdapter;
+import org.apache.log4j.Logger;
 import storage.Storage;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class BranchAnalyzer {
-    private static final String SEPERATEER="#";
     private static final String DEVIDER="-";
     private Set<Integer> branchIds=new HashSet<>();
     private Map<String,Integer> branches=new HashMap<>();
 
     private static class LineAnalyzer{
         private boolean skip=false;
-        private boolean lastIfFalse=false;
-        private String lastIfFalseCallsite;
 
-        public Pair<String,Integer> analyzeLine(String line){
+        public Integer analyzeLine(String line){
             if(line.contains(DEVIDER)){
                 skip=!skip;
-                //测试用例最后执行的branch是if的false分支
-                if(skip&&lastIfFalse){
-                    lastIfFalse=false;
-                    int index=lastIfFalseCallsite.lastIndexOf(SEPERATEER);
-                    return new Pair<>(lastIfFalseCallsite.substring(0,index),Integer.parseInt(lastIfFalseCallsite.substring(index+1)));
-                }
                 return null;
             }
             if(skip){
                 return null;
             }
-            String[] ss =line.split(SEPERATEER); // class#methodName#methodDesc#branchId Or class#methodName#methodDesc#branchId#trueOrFalse
-            int size=ss.length;
-
-            //true分支
-            if(ss[size-1].equals("true")){
-                lastIfFalse=false;
-                return new Pair<>(ss[0]+"#"+ss[1]+"#"+ss[2],Integer.parseInt(ss[3]));
-            }else if(ss[size-1].equals("false")){
-                boolean tmpFalse=lastIfFalse;
-                String tmpFalseCallsite=lastIfFalseCallsite;
-                lastIfFalse=true;
-                lastIfFalseCallsite=ss[0]+"#"+ss[1]+"#"+ss[2]+"#"+ss[3];
-                //上一个是false分支
-                if(tmpFalse){
-                    int index=tmpFalseCallsite.lastIndexOf(SEPERATEER);
-                    return new Pair<>(tmpFalseCallsite.substring(0,index),Integer.parseInt(tmpFalseCallsite.substring(index+1)));
-                }
-                return null;
-            }else{
-                //switch
-                return new Pair<>(ss[0]+"#"+ss[1]+"#"+ss[2],Integer.parseInt(ss[3]));
-            }
+            return Integer.parseInt(line.trim());
         }
     }
 
@@ -67,10 +36,9 @@ public class BranchAnalyzer {
 
         public boolean analyzeLine(String line){
             //先委托给LineAnalyzer进行分析
-            Pair<String,Integer> p=analyzer.analyzeLine(line);
-            if(p!=null){
-                int branchId=p.b;
-                result.add(branchId);
+            Integer i=analyzer.analyzeLine(line);
+            if(i!=null){
+                result.add(i);
             }
 
             if(line.contains(DEVIDER)){
@@ -102,16 +70,23 @@ public class BranchAnalyzer {
     public void analyze(File file) throws IOException {
         final LineAnalyzer lineAnalyzer=new LineAnalyzer();
         BufferedReader bufferedReader=new BufferedReader(new FileReader(file));
+        Set<Integer> branchIds=new HashSet<>();
         String line;
         while((line=bufferedReader.readLine())!=null){
-            Pair<String,Integer> p=lineAnalyzer.analyzeLine(line);
-            if(p!=null){
-                String method=p.a;
-                int branchId=p.b;
-                if(!branchIds.contains(branchId)){
-                    branchIds.add(branchId);
-                    branches.putIfAbsent(method,0);
-                    branches.put(method,branches.get(method)+1);
+            Integer i=lineAnalyzer.analyzeLine(line);
+            if(i!=null){branchIds.add(i);}
+        }
+        bufferedReader.close();
+        for(String method:Storage.branches.get().keySet()){
+            List<BranchCoverageMethodAdapter.BranchStruct> branchList=Storage.branches.get().get(method);
+            for(BranchCoverageMethodAdapter.BranchStruct branchStruct:branchList){
+                int id=branchStruct.id();
+                if(branchIds.contains(id)){
+                    if(!this.branches.containsKey(method)){
+                        this.branches.put(method,1);
+                    }else{
+                        this.branches.put(method,this.branches.get(method)+1);
+                    }
                 }
             }
         }
@@ -126,6 +101,7 @@ public class BranchAnalyzer {
         while((line=bufferedReader.readLine())!=null){
             lineAnalyzer.analyzeLine(line);
         }
+        bufferedReader.close();
         Storage.exec_branches2.set(lineAnalyzer.results);
     }
 }

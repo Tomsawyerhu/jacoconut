@@ -11,6 +11,8 @@ public class CoverageMethodAdapterFactory {
             return new NaiveStatementCoverageMethodAdapter(after,className,methodName);
         }else if(scType==SCType.BRANCH){
             return new BranchCoverageMethodAdapter(after,className,methodName);
+        }else if(scType==SCType.METHOD){
+            return new MethodCoverageMethodAdapter(after,className,methodName);
         }else if(scType==SCType.CFG){
             return new CfgMethodAdapter(after,className,methodName);
         }else if(scType==SCType.METHOD_START_END){

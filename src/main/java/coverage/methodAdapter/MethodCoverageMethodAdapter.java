@@ -1,8 +1,11 @@
 package coverage.methodAdapter;
 
-import jdk.internal.org.objectweb.asm.MethodVisitor;
 import org.apache.log4j.Logger;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import storage.Storage;
+
+import java.util.HashSet;
 
 public class MethodCoverageMethodAdapter extends MethodVisitor {
     private static Logger logger = Logger.getLogger(MethodCoverageMethodAdapter.class);
@@ -24,9 +27,16 @@ public class MethodCoverageMethodAdapter extends MethodVisitor {
                             + "externX/JacoconutX" + ";");
             mv.visitLdcInsn(className+"#"+name);
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    "externX/JacoconutX", "methodEnd",
+                    "externX/JacoconutX", "executeMethod",
                     "(Ljava/lang/String;)V");
         }
         super.visitInsn(opcode);
+    }
+
+    @Override
+    public void visitEnd() {
+        Storage.methods.get().putIfAbsent(className,new HashSet<>());
+        Storage.methods.get().get(className).add(name);
+        super.visitEnd();
     }
 }

@@ -1,6 +1,5 @@
 package junit;
 
-import org.apache.maven.it.VerificationException;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -15,6 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+
 public class TestDetector {
     private String project;
 
@@ -27,9 +28,7 @@ public class TestDetector {
 
     private TestDetector(){}
 
-    public Map<String, List<String>> detectAllJunitTests()  {
-        Map<String, List<String>> m=new HashMap<>();
-
+    public void detectAllJunitTests()  {
         final String finalProject = project;
         try {
             Files
@@ -48,8 +47,6 @@ public class TestDetector {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Storage.tests.set(m);
-        return m;
     }
 
 
@@ -68,7 +65,7 @@ public class TestDetector {
 
         @Override
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-            if(desc.equals("()V")&&access==1){
+            if(desc.equals("()V")&&access==ACC_PUBLIC){
                 if(name.startsWith("test")){
                     Storage.tests.get().putIfAbsent(className.replace("/","."),new ArrayList<>());
                     Storage.tests.get().get(className.replace("/",".")).add(name);
@@ -98,20 +95,4 @@ public class TestDetector {
             return super.visitAnnotation(s, b);
         }
     }
-
-    public static void main(String[] args) {
-        try {
-            Map<String,List<String>> m=new TestDetector("C:\\Users\\tom\\Desktop\\junittest").detectAllJunitTests();
-            TestDriver t=new TestDriver("C:\\Users\\tom\\Desktop\\junittest");
-
-            for (String clazz:m.keySet()){
-                for(String method:m.get(clazz)){
-                    t.run(clazz,method);
-                }
-            }
-        } catch (IOException | VerificationException e) {
-            e.printStackTrace();
-        }
-    }
-
 }

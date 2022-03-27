@@ -87,6 +87,7 @@ public class StatementAnalyzer {
                 callsites.add(p.a);
             }
         }
+        bufferedReader.close();
         Storage.exec_lines.set(this.lines);
     }
 
@@ -98,6 +99,7 @@ public class StatementAnalyzer {
         while((line=bufferedReader.readLine())!=null){
             lineAnalyzer.analyzeLine(line);
         }
+        bufferedReader.close();
         Storage.exec_lines2.set(lineAnalyzer.results);
     }
 

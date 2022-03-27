@@ -90,6 +90,7 @@ public class PathAnalyzer {
         for(String key:lineAnalyzer.existPaths.keySet()){
             methodPaths.put(key,lineAnalyzer.existPaths.get(key).size());
         }
+        bufferedReader.close();
         Storage.exec_paths.set(methodPaths);
     }
 }

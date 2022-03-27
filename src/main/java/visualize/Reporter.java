@@ -22,7 +22,8 @@ public class Reporter {
     public enum ReportType{
         STATEMENT_COVERAGE,
         BRANCH_COVERAGE,
-        PATH_COVERAGE
+        PATH_COVERAGE,
+        METHOD_COVERAGE
     }
     private static final String titleKey="title";
     private static final Font bold = new Font(Font.FontFamily.TIMES_ROMAN, 18,
@@ -39,6 +40,8 @@ public class Reporter {
             generateBranchCoverageReport(p,parameters);
         }else if(type==ReportType.PATH_COVERAGE){
             generatePathCoverageReport(p,parameters);
+        }else if(type==ReportType.METHOD_COVERAGE){
+            generateMethodCoverageReport(p,parameters);
         }
     }
 
@@ -214,6 +217,66 @@ public class Reporter {
                 table.addCell(String.valueOf((double) 100*Storage.exec_paths.get().getOrDefault(p,0)/(double)Storage.paths.get().get(p)));
             }
 
+        }
+
+        Paragraph content = new Paragraph();
+        content.add(table);
+        addEmptyLine(content,2);
+        document.add(content);
+        document.close();
+    }
+
+    private static void generateMethodCoverageReport(String path, Map<String,String> parameters) throws FileNotFoundException, DocumentException {
+        Document document = new Document();
+        File f=new File(path);
+        if(f.exists())f.delete();
+        PdfWriter.getInstance(document, new FileOutputStream(path));
+        document.open();
+
+        //add title
+        if(!parameters.containsKey(titleKey)){
+            parameters.put(titleKey,"Method Coverage Report By Jacoconut");
+        }
+        Paragraph preface = new Paragraph();
+        addEmptyLine(preface, 1);
+        preface.add(new Paragraph(parameters.get(titleKey), bold));
+        addEmptyLine(preface, 1);
+        preface.add(new Paragraph(new Date().toString(),smallBold));
+        addEmptyLine(preface, 1);
+        document.add(preface);
+
+        int methodsSum=Storage.methods.get().values().stream().mapToInt(Set::size).reduce(Integer::sum).getAsInt();
+        int methodExec=Storage.exec_methods.get().values().stream().reduce(Integer::sum).get();
+        Paragraph basicInfo = new Paragraph();
+        addEmptyLine(basicInfo, 1);
+        basicInfo.add(new Paragraph("Basic Coverage Info", bold));
+        addEmptyLine(basicInfo, 1);
+        basicInfo.add(new Paragraph(String.format("total_methods: %d\nexec_methods: %d\ncoverage_rate: %.3f%%\n",methodsSum,methodExec, (double) 100*methodExec / (double) methodsSum),smallBold));
+        addEmptyLine(basicInfo, 3);
+        document.add(basicInfo);
+
+        //add table
+        PdfPTable table = new PdfPTable(3);
+
+        PdfPCell b = new PdfPCell(new Phrase("class_name"));
+        b.setHorizontalAlignment(Element.ALIGN_CENTER);
+        table.addCell(b);
+
+        b = new PdfPCell(new Phrase("covered_methods/all_methods"));
+        b.setHorizontalAlignment(Element.ALIGN_CENTER);
+        table.addCell(b);
+
+        b = new PdfPCell(new Phrase("coverage_rate(%)"));
+        b.setHorizontalAlignment(Element.ALIGN_CENTER);
+        table.addCell(b);
+        table.setHeaderRows(1);
+
+        for(String c:Storage.methods.get().keySet()){
+            if(Storage.methods.get().get(c).size()>0){
+                table.addCell(c);
+                table.addCell(String.format("%d/%d",Storage.exec_methods.get().getOrDefault(c,0),Storage.methods.get().get(c).size()));
+                table.addCell(String.valueOf((double) 100*Storage.exec_methods.get().getOrDefault(c,0)/(double)Storage.methods.get().get(c).size()));
+            }
         }
 
         Paragraph content = new Paragraph();

@@ -194,6 +194,7 @@ public class CfgMethodAdapter extends MethodVisitor {
             }
             super.visitInsn(opcode);
         }
+
     }
 
 
