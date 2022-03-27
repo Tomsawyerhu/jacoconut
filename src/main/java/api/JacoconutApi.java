@@ -233,6 +233,8 @@ public class JacoconutApi {
             e.printStackTrace();
         }
 
+        //int a=Storage.lines.get().size();
+
         try {
             TestDriver t=new TestDriver(project);
             t.runAllTests();
@@ -435,14 +437,14 @@ public class JacoconutApi {
                 "D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\dictomaton-dictomaton-1.2.1",
                 "D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\elasticsearch-analysis-pinyin"
         };
-//        for(String p:projects){
-//            lineCoverage(p);
-//            branchCoverage(p);
-//            methodCoverage(p);
-//        }
+        for(String p:projects){
+            lineCoverage(p);
+            branchCoverage(p);
+            methodCoverage(p);
+        }
 
-        String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\commons-exec-1.3-RC1";
-        lineCoverage(p);
+//        String p="D:\\BaiduNetdiskDownload\\maven-projects\\maven-projects\\elasticsearch-analysis-pinyin";
+//        methodCoverage(p);
     }
 
 }
