@@ -1,9 +1,9 @@
 package storage;
 
 import com.github.javaparser.utils.Pair;
-import com.kitfox.svg.A;
-import coverage.methodAdapter.BranchCoverageMethodAdapter;
-import coverage.methodAdapter.CfgMethodAdapter;
+import core.branch.BranchCoverageMethodAdapter;
+import model.BasicBlock;
+import model.Edge;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,14 +15,7 @@ public class Storage {
 
     public static AtomicReference<Map<String,Set<Integer>>> lines = new AtomicReference<>(new ConcurrentHashMap<>());
 
-    public static AtomicReference<ConcurrentMap<String, List<Pair<Integer,Integer>>>> probes = new AtomicReference<>(
-            new ConcurrentHashMap<>());
-
-    public static AtomicReference<Vector<CfgMethodAdapter.ControlFlowGraph>> cfgs=new AtomicReference<>(new Vector<>());
-
     public static AtomicReference<ConcurrentMap<String, List<BranchCoverageMethodAdapter.BranchStruct>>> branches=new AtomicReference<>(new ConcurrentHashMap<>());
-
-    public static AtomicReference<ConcurrentMap<String,Integer>> paths=new AtomicReference<>(new ConcurrentHashMap<>());
 
     public static AtomicReference<Map<String, Integer>> exec_lines= new AtomicReference<>(new HashMap<>()); //key: method value: line executed for each method
 
@@ -32,11 +25,17 @@ public class Storage {
 
     public static AtomicReference<Map<Integer,Set<String>>> exec_branches2=new AtomicReference<>(new HashMap<>()); //key: branchId value:set(test method)
 
-    public static AtomicReference<Map<String,Integer>> exec_paths=new AtomicReference<>(new HashMap<>());
-
     public static AtomicReference<Map<String,Set<String>>> methods=new AtomicReference<>(new HashMap<>());
 
     public static AtomicReference<Map<String,Integer>> exec_methods=new AtomicReference<>(new HashMap<>()); //key: class value: method executed for each class
 
     public static AtomicReference<Map<String,Set<String>>> exec_methods2=new AtomicReference<>(new HashMap<>()); //key: method value: set(test method)
+
+    public static AtomicReference<Map<String, Set<BasicBlock>>> blocks=new AtomicReference<>(new HashMap<>());
+
+    public static AtomicReference<Map<Integer, Set<String>>> exec_blocks =new AtomicReference<>(new HashMap<>()); //key: blockId value: set(test method)
+
+    public static AtomicReference<Map<String, Set<Edge>>> edges=new AtomicReference<>(new HashMap<>());
+
+    public static AtomicReference<Map<Pair<Integer,Integer>, Set<String>>> possible_exec_edges =new AtomicReference<>(new HashMap<>()); //key: Pair(startBlockId,endBlockId) value: set(test method)
 }

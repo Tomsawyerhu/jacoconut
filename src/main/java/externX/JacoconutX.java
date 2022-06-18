@@ -16,11 +16,10 @@ public class JacoconutX {
 
     private static Set<String> lines=new HashSet<>();
     private static Set<String> methods=new HashSet<>();
+    private static Set<Integer> blocks=new HashSet<>();
 
     private JacoconutX() {
     }
-
-    //path coverage
 
     public static JacoconutX getInstance() {
         if (jacoconutX == null) {
@@ -29,56 +28,48 @@ public class JacoconutX {
         return jacoconutX;
     }
 
-    public void executeLabel(String callsite,int labelId) throws IOException {
-        File file=new File(output);
+    //block core
+    public static void executeBlock(int blockId) throws IOException {
+        if (blocks.contains(blockId)) return;
+        File file = new File(output);
         boolean flag;
-        if(!file.exists()){
-            flag=file.createNewFile();
-        }else{
-            flag=file.isFile()&& file.canWrite();
+        if (!file.exists()) {
+            flag = file.createNewFile();
+        } else {
+            flag = file.isFile() && file.canWrite();
         }
-        if(flag){
-            FileWriter fw=new FileWriter(file,true);
-            fw.append(callsite).append("#").append(String.valueOf(labelId)).append("\n");
+        if (flag) {
+            FileWriter fw = new FileWriter(file, true);
+            fw.append(String.valueOf(blockId)).append("\n");
             fw.flush();
             fw.close();
+            blocks.add(blockId);
         }
     }
 
-    public void methodStart(String method) throws IOException {
-        File file=new File(output);
+    public static void executeBlock(String blockIds) throws IOException {
+        File file = new File(output);
         boolean flag;
-        if(!file.exists()){
-            flag=file.createNewFile();
-        }else{
-            flag=file.isFile()&& file.canWrite();
+        if (!file.exists()) {
+            flag = file.createNewFile();
+        } else {
+            flag = file.isFile() && file.canWrite();
         }
-        if(flag){
-            FileWriter fw=new FileWriter(file,true);
-            fw.append(method).append("#").append("start").append("\n");
-            fw.flush();
-            fw.close();
+        String[] blockIdsStrs=blockIds.split(","); //blockId1,blockId2,...,
+        for(String blockIdStr:blockIdsStrs){
+            int blockId= Integer.parseInt(blockIdStr);
+            if (blocks.contains(blockId)) continue;
+            if (flag) {
+                FileWriter fw = new FileWriter(file, true);
+                fw.append(String.valueOf(blockId)).append("\n");
+                fw.flush();
+                fw.close();
+                blocks.add(blockId);
+            }
         }
     }
 
-    public void methodEnd(String method) throws IOException {
-        File file=new File(output);
-        boolean flag;
-        if(!file.exists()){
-            flag=file.createNewFile();
-        }else{
-            flag=file.isFile()&& file.canWrite();
-        }
-        if(flag){
-            FileWriter fw=new FileWriter(file,true);
-            fw.append(method).append("#").append("end").append("\n");
-            fw.flush();
-            fw.close();
-        }
-    }
-
-    //line coverage
-
+    //line core
     public void executeLines(String callsite,int line) throws IOException {
         String ss=callsite+"#"+line;
         if(lines.contains(ss))return;
@@ -99,7 +90,7 @@ public class JacoconutX {
         }
     }
 
-    //method coverage
+    //method core
 
     public void executeMethod(String method) throws IOException {
         if(methods.contains(method))return;
@@ -112,14 +103,14 @@ public class JacoconutX {
         }
         if(flag){
             FileWriter fw=new FileWriter(file,true);
-            fw.append(method).append("#").append("end").append("\n");
+            fw.append(method).append("\n");
             fw.flush();
             fw.close();
             methods.add(method);
         }
     }
 
-    //branch coverage
+    //branch core
 
     //goto switch
     public void executeBranch(int branchId) throws IOException {
@@ -202,7 +193,7 @@ public class JacoconutX {
             for(int i:ifFalse){
                 if(!branches.contains(i))fw.append(String.valueOf(i)).append("\n");
             }
-            fw.append(String.format("--------------------\ntest_method:%s\n--------------------\n",method));
+            fw.append(String.format("test_method:%s\n",method));
             fw.flush();
             fw.close();
         }
@@ -210,5 +201,6 @@ public class JacoconutX {
         branches.clear();
         lines.clear();
         methods.clear();
+        blocks.clear();
     }
 }

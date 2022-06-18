@@ -1,7 +1,5 @@
 package analyze;
 
-
-import com.github.javaparser.utils.Pair;
 import storage.Storage;
 
 import java.io.BufferedReader;
@@ -13,14 +11,13 @@ import java.util.Set;
 
 /**
  * format:
- * branchId1
- * branchId2
+ * blockId1
+ * blockId2
  * ......
- * branchIdN
+ * blockIdN
  * "test_method":testX
  */
-
-public class BranchAnalyzer {
+public class BlockAnalyzer {
     public static void analyze(File file) throws IOException {
         String testMethodPrefix="test_method:";
         BufferedReader reader=new BufferedReader(new FileReader(file));
@@ -31,8 +28,8 @@ public class BranchAnalyzer {
                 //test ends
                 String testMethod=line.substring(testMethodPrefix.length());
                 for(Integer i:results){
-                    Storage.exec_branches2.get().putIfAbsent(i,new HashSet<>());
-                    Storage.exec_branches2.get().get(i).add(testMethod);
+                    Storage.exec_blocks.get().putIfAbsent(i,new HashSet<>());
+                    Storage.exec_blocks.get().get(i).add(testMethod);
                 }
                 results.clear();
             }else{
@@ -40,4 +37,5 @@ public class BranchAnalyzer {
             }
         }
     }
+
 }

@@ -1,0 +1,30 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+actor 系统 as system
+participant "CfgBuilder" as cb
+participant "BlockGraph" as bg
+participant "DfsBlockGraph" as dbg
+participant "DominatorTreeGraph" as dtg
+
+autonumber
+activate system
+system -> cb: 构建BlockGraph
+activate cb
+cb -> system: 返回结果
+deactivate cb
+system -> bg: 构建DfsBlockGraph
+activate bg
+bg -> system: 返回结果
+deactivate bg
+system -> dbg: 构建DominatorTreeGraph
+activate dbg
+dbg -> system: 返回结果
+deactivate dbg
+system -> dtg: 优化算法
+activate dtg
+dtg -> system: 返回结果
+deactivate dtg
+deactivate system
+
+@enduml

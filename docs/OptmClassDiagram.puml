@@ -1,0 +1,21 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+BlockGraph ..> CfgBuilder
+DfsBlockGraph ..> BlockGraph
+DominatorTreeGraph ..> DfsBlockGraph
+BlockGraph -- GraphHandler
+DfsBlockGraph -- GraphHandler
+DominatorTreeGraph -- GraphHandler
+BlockGraph -- Visualizer
+DfsBlockGraph -- Visualizer
+DominatorTreeGraph -- Visualizer
+
+class BlockGraph{}
+class CfgBuilder{}
+class DfsBlockGraph{}
+class DominatorTreeGraph{}
+class Visualizer{}
+class GraphHandler{}
+
+@enduml

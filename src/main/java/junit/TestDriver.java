@@ -28,7 +28,7 @@ public class TestDriver {
     public void runAllTests(){
         if(v.isAutoclean()) v.setAutoclean(false);
         try {
-            v.executeGoals(Collections.singletonList("surefire:test"));
+            v.executeGoals(Arrays.asList("surefire:test","-DargLine="+"-noverify -XX:-UseSplitVerifier"));
         } catch (VerificationException e) {
             e.printStackTrace();
         }

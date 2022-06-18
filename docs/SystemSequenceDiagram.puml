@@ -1,0 +1,49 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+actor 用户 as user
+participant "系统" as system
+participant "缓存" as cache
+participant "磁盘" as disk
+
+autonumber
+
+activate user
+user -> system: 上传项目
+activate system
+system -> disk: 存储项目
+activate disk
+disk -> system: 存储成功
+system -> user: 上传成功
+
+user -> system: 浏览项目
+system -> cache: 获取项目文件目录
+activate cache
+cache -> system: 返回项目文件目录
+deactivate cache
+
+
+opt
+    system ->disk: 获取文件目录
+    disk ->system: 返回文件目录
+system -> user: 项目文件目录
+user -> system: 浏览文件
+system ->disk: 获取文件内容
+disk ->system: 返回文件内容
+system -> user: 返回文件内容
+
+user -> system: 执行测试
+system --> user: 返回结果
+
+user -> system: 查看测试结果
+system ->disk: 获取测试结果
+disk ->system: 返回测试结果
+deactivate disk
+system -> user: 返回测试结果
+
+
+
+deactivate system
+deactivate user
+
+@enduml

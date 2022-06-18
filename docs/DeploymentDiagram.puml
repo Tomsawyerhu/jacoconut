@@ -1,0 +1,20 @@
+@startuml
+'https://plantuml.com/deployment-diagram
+
+folder 部署视图{
+node "Web服务端" as server{
+cloud "Tomcat"
+cloud "Jdk"
+cloud "Jre"
+}
+node "Web客户端" as client{
+cloud "Chrome"
+cloud "Javascript"
+}
+node "服务端依赖" as serverDependency{
+cloud "Jar"
+}
+
+server --> client
+serverDependency -->server
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class MethodVisitor
+abstract class ClassVisitor
+
+MethodVisitor <|-- BranchCoverageMethodAdapter
+MethodVisitor <|-- StatementCoverageMethodAdapter
+MethodVisitor <|-- MethodCoverageMethodAdapter
+MethodVisitor <|-- BlockCoverageMethodAdapter
+MethodVisitorFactory ..> MethodVisitor
+
+ClassVisitor <|-- ClassAdapter
+ClassAdapter -- MethodVisitorFactory
+
+class MethodVisitorFactory{}
+
+class BranchCoverageMethodAdapter{}
+
+class StatementCoverageMethodAdapter{}
+
+class MethodCoverageMethodAdapter{}
+
+class BlockCoverageMethodAdapter{}
+
+class ClassAdapter{}
+
+
+@enduml

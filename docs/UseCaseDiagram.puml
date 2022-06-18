@@ -1,0 +1,18 @@
+@startuml
+'https://plantuml.com/use-case-diagram
+
+left to right direction
+actor "用户" as user
+
+package java覆盖率工具 {
+    usecase "上传、浏览项目" as case0
+    usecase "编译项目、运行项目、运行测试" as case1
+    usecase "检索测试用例" as case2
+    usecase "执行覆盖率测试，查看结果" as case3
+}
+user -> (case0)
+user -> (case1)
+user -> (case2)
+user -> (case3)
+
+@enduml

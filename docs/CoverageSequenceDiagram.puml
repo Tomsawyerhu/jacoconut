@@ -1,0 +1,27 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+actor 系统 as system
+participant "ClassVisitor" as cv
+participant "MethodVisitor" as mv
+participant "MethodVisitorFactory" as mvf
+
+autonumber
+
+activate system
+system -> cv: 分析类文件
+
+activate cv
+cv ->mvf: 构造MethodVisitor
+activate mvf
+mvf -> cv: MethodVisitor
+deactivate mvf
+cv -> mv: 分析方法
+activate mv
+mv -> cv: 方法分析结果
+deactivate mv
+cv -> system: 类分析结果
+deactivate cv
+deactivate system
+
+@enduml
