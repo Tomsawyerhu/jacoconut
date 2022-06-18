@@ -21,6 +21,9 @@ public class CfgBuilder {
         //建立块控制流图
         BlockGraph blockGraph=new CompleteBlockGraph(body);
         List<Block> blocks=blockGraph.getBlocks();
+        //fixme
+//        myBlockGraph.testBlocks=blocks;
+//        myBlockGraph.method=method.getName();
 
         myBlockGraph.blocks=new ArrayList<>();
         myBlockGraph.flowsParentSons=new HashMap<>();

@@ -26,7 +26,7 @@ public class BlockSootDriver {
             j+=1;
         }
         soot.Main.main(clazz);
-        //logger.info(String.format("before optm %d blocks, after optm %d/%d blocks.",BlockCounter.blocks2,BlockCounter.blocks,BlockCounter.blocks1));
+        logger.info(String.format("before optm %d blocks, after optm %d/%d blocks.",BlockCounter.blocks2,BlockCounter.blocks,BlockCounter.blocks1));
     }
 
     private static void sootSetUp(String project){

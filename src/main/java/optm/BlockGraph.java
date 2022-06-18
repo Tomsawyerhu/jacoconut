@@ -4,6 +4,7 @@ import model.BasicBlock;
 import soot.Scene;
 import soot.SootClass;
 import soot.options.Options;
+import soot.toolkits.graph.Block;
 
 import java.io.File;
 import java.util.*;
@@ -68,8 +69,9 @@ public class BlockGraph {
                 graph.dfsParentToSons.putIfAbsent(current,new HashSet<>());
                 graph.dfsParentToSons.get(current).add(offspring);
                 graph.dfsSonToParent.put(offspring,current);
-                current=offspring;
                 s.push(current);
+                current=offspring;
+
             }else{
                 //no offspring found
                 //find proper ancestor
